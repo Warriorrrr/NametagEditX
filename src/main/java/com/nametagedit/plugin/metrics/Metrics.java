@@ -29,6 +29,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
@@ -173,24 +174,15 @@ public class Metrics {
      * Starts the Scheduler which submits our data every 30 minutes.
      */
     private void startSubmitting() {
-        final Timer timer = new Timer(true); // We use a timer cause the Bukkit scheduler is affected by server lags
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (!plugin.isEnabled()) { // Plugin was disabled
-                    timer.cancel();
-                    return;
-                }
-                // Nevertheless we want our code to run in the Bukkit main thread, so we have to use the Bukkit scheduler
-                // Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
-                Bukkit.getScheduler().runTask(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        submitData();
-                    }
-                });
+        Bukkit.getAsyncScheduler().runAtFixedRate(plugin, t -> {
+            if (!plugin.isEnabled()) { // Plugin was disabled
+                t.cancel();
+                return;
             }
-        }, 1000*60*5, 1000*60*30);
+            // Nevertheless we want our code to run in the Bukkit main thread, so we have to use the Bukkit scheduler
+            // Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
+            Bukkit.getGlobalRegionScheduler().run(plugin, task -> submitData());
+        }, 5, 30, TimeUnit.MINUTES);
         // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
         // WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!
         // WARNING: Just don't do it!

@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +17,7 @@ import java.sql.*;
  * This class converts to and from Flatfile and MySQL
  */
 @AllArgsConstructor
-public class ConverterTask extends BukkitRunnable {
+public class ConverterTask implements Runnable {
 
     private final boolean databaseToFile;
     private final CommandSender sender;
@@ -37,12 +36,7 @@ public class ConverterTask extends BukkitRunnable {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    plugin.getHandler().reload();
-                }
-            }.runTask(plugin);
+            plugin.getHandler().reload();
         }
     }
 

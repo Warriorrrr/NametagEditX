@@ -1,8 +1,8 @@
 package com.nametagedit.plugin.utils;
 
 import com.google.common.collect.ImmutableList;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -37,25 +37,16 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
     }
 
     public static void lookupUUID(final String name, final Plugin plugin, final UUIDLookup uuidLookup) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                UUID response = null;
-                try {
-                    response = getUUIDOf(name);
-                } catch (Exception e) {
-                    // Swallow
-                }
-
-                final UUID finalResponse = response;
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        uuidLookup.response(finalResponse);
-                    }
-                }.runTask(plugin);
+        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
+            UUID response = null;
+            try {
+                response = getUUIDOf(name);
+            } catch (Exception e) {
+                // Swallow
             }
-        }.runTaskAsynchronously(plugin);
+
+            uuidLookup.response(response);
+        });
     }
 
     private static void writeBody(HttpURLConnection connection, String body) throws Exception {

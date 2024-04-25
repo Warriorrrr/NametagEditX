@@ -5,7 +5,6 @@ import com.nametagedit.plugin.NametagHandler;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @AllArgsConstructor
-public class DatabaseUpdater extends BukkitRunnable {
+public class DatabaseUpdater implements Runnable {
 
     private final NametagHandler handler;
     private final HikariDataSource hikari;
@@ -51,7 +50,7 @@ public class DatabaseUpdater extends BukkitRunnable {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            new DataDownloader(handler, hikari).runTaskAsynchronously(plugin);
+            plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new DataDownloader(handler, hikari).run());
         }
     }
 

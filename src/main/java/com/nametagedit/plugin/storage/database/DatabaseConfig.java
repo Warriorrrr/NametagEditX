@@ -61,12 +61,12 @@ public class DatabaseConfig implements AbstractConfig {
         hikari.setUsername(config.getString("MySQL.Username"));
         hikari.setPassword(config.getString("MySQL.Password"));
 
-        new DatabaseUpdater(handler, hikari, plugin).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new DatabaseUpdater(handler, hikari, plugin).run());
     }
 
     @Override
     public void reload() {
-        new DataDownloader(handler, hikari).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new DataDownloader(handler, hikari).run());
     }
 
     @Override
@@ -78,17 +78,17 @@ public class DatabaseConfig implements AbstractConfig {
 
     @Override
     public void load(Player player, boolean loggedIn) {
-        new PlayerLoader(player.getUniqueId(), plugin, handler, hikari, loggedIn).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new PlayerLoader(player.getUniqueId(), plugin, handler, hikari, loggedIn).run());
     }
 
     @Override
     public void save(PlayerData... playerData) {
-        new PlayerSaver(playerData, hikari).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new PlayerSaver(playerData, hikari).run());
     }
 
     @Override
     public void save(GroupData... groupData) {
-        new GroupSaver(groupData, hikari).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new GroupSaver(groupData, hikari).run());
     }
 
     @Override
@@ -96,36 +96,38 @@ public class DatabaseConfig implements AbstractConfig {
         if (playerTag) {
             UUIDFetcher.lookupUUID(key, plugin, uuid -> {
                 if (uuid != null) {
-                    new PlayerPriority(uuid, priority, hikari).runTaskAsynchronously(plugin);
+                    plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new PlayerPriority(uuid, priority, hikari).run());
                 } else {
                     plugin.getLogger().severe("An error has occurred while looking for UUID.");
                 }
             });
         } else {
-            new GroupPriority(key, priority, hikari).runTaskAsynchronously(plugin);
+            plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new GroupPriority(key, priority, hikari).run());
         }
     }
 
     @Override
     public void delete(GroupData groupData) {
-        new GroupDeleter(groupData.getGroupName(), hikari).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new GroupDeleter(groupData.getGroupName(), hikari).run());
     }
 
     @Override
     public void add(GroupData groupData) {
-        new GroupAdd(groupData, hikari).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new GroupAdd(groupData, hikari).run());
     }
 
     @Override
     public void clear(UUID uuid, String targetName) {
-        new PlayerDeleter(uuid, hikari).runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new PlayerDeleter(uuid, hikari).run());
     }
 
     @Override
     public void orderGroups(CommandSender commandSender, List<String> order) {
         String formatted = Arrays.toString(order.toArray());
         formatted = formatted.substring(1, formatted.length() - 1).replace(",", "");
-        new GroupConfigUpdater("order", formatted, hikari).runTaskAsynchronously(handler.getPlugin());
+
+        String format = formatted;
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> new GroupConfigUpdater("order", format, hikari).run());
     }
 
 }

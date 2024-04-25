@@ -12,6 +12,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO:
@@ -74,7 +75,7 @@ public class NametagEdit extends JavaPlugin {
         }
 
         if (version.name().startsWith("v1_8_"))
-            new InvisibilityTask().runTaskTimerAsynchronously(this, 100L, 20L);
+            getServer().getAsyncScheduler().runAtFixedRate(this, t -> new InvisibilityTask().run(), 5, 1, TimeUnit.SECONDS);
     }
 
     public static NametagEdit getInstance(){

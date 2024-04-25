@@ -5,14 +5,13 @@ import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.utils.Utils;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @AllArgsConstructor
-public class GroupSaver extends BukkitRunnable {
+public class GroupSaver implements Runnable {
 
     private final GroupData[] groupData;
     private final HikariDataSource hikari;

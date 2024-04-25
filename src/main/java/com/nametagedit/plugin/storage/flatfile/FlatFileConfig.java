@@ -11,7 +11,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,24 +43,14 @@ public class FlatFileConfig implements AbstractConfig {
         loadGroups();
         loadPlayers();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                handler.applyTags();
-            }
-        }.runTask(plugin);
+        handler.applyTags();
     }
 
     @Override
     public void reload() {
         handler.clearMemoryData();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                load();
-            }
-        }.runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> load());
     }
 
     @Override
@@ -91,16 +80,13 @@ public class FlatFileConfig implements AbstractConfig {
 
     @Override
     public void save(final GroupData... data) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (GroupData groupData : data) {
-                    storeGroup(groupData);
-                }
-
-                save(groups, groupsFile);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> {
+            for (GroupData groupData : data) {
+                storeGroup(groupData);
             }
-        }.runTaskAsynchronously(plugin);
+
+            save(groups, groupsFile);
+        });
     }
 
     @Override

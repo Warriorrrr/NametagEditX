@@ -12,6 +12,7 @@ import com.nametagedit.plugin.storage.flatfile.FlatFileConfig;
 import com.nametagedit.plugin.utils.Configuration;
 import com.nametagedit.plugin.utils.UUIDFetcher;
 import com.nametagedit.plugin.utils.Utils;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,11 +28,10 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -49,8 +49,8 @@ public class NametagHandler implements Listener {
     private boolean longNametagsEnabled;
     private boolean refreshTagOnWorldChange;
 
-    private BukkitTask clearEmptyTeamTask;
-    private BukkitTask refreshNametagTask;
+    private ScheduledTask clearEmptyTeamTask;
+    private ScheduledTask refreshNametagTask;
     private AbstractConfig abstractConfig;
 
     private Configuration config;
@@ -81,12 +81,7 @@ public class NametagHandler implements Listener {
             abstractConfig = new FlatFileConfig(plugin, this);
         }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                abstractConfig.load();
-            }
-        }.runTaskAsynchronously(plugin);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> abstractConfig.load());
     }
 
     /**
@@ -137,12 +132,7 @@ public class NametagHandler implements Listener {
         final Player player = event.getPlayer();
         nametagManager.sendTeams(player);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                abstractConfig.load(player, true);
-            }
-        }.runTaskLaterAsynchronously(plugin, 1);
+        plugin.getServer().getAsyncScheduler().runNow(plugin, t -> abstractConfig.load(player, true));
     }
 
     /**
@@ -153,12 +143,7 @@ public class NametagHandler implements Listener {
     public void onTeleport(final PlayerChangedWorldEvent event) {
         if (!refreshTagOnWorldChange) return;
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                applyTagToPlayer(event.getPlayer(), false);
-            }
-        }.runTaskLater(plugin, 3);
+        event.getPlayer().getScheduler().runDelayed(plugin, t -> applyTagToPlayer(event.getPlayer(), false), () -> {}, 3L);
     }
 
     private void handleClear(UUID uuid, String player) {
@@ -303,13 +288,13 @@ public class NametagHandler implements Listener {
         return Utils.format(input, limitChars);
     }
 
-    private BukkitTask createTask(String path, BukkitTask existing, Runnable runnable) {
+    private ScheduledTask createTask(String path, ScheduledTask existing, Runnable runnable) {
         if (existing != null) {
             existing.cancel();
         }
 
         if (config.getInt(path, -1) <= 0) return null;
-        return Bukkit.getScheduler().runTaskTimer(plugin, runnable, 0, 20L * config.getInt(path));
+        return Bukkit.getAsyncScheduler().runAtFixedRate(plugin, t -> runnable.run(), 1, config.getInt(path), TimeUnit.SECONDS);
     }
 
     public void reload() {
@@ -340,19 +325,9 @@ public class NametagHandler implements Listener {
     }
 
     public void applyTags() {
-        if (!Bukkit.isPrimaryThread()) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    applyTags();
-                }
-            }.runTask(plugin);
-            return;
-        }
-
         for (Player online : Utils.getOnline()) {
             if (online != null) {
-                applyTagToPlayer(online, false);
+                online.getScheduler().run(plugin, t -> applyTagToPlayer(online, false), () -> {});
             }
         }
 
@@ -362,12 +337,7 @@ public class NametagHandler implements Listener {
     public void applyTagToPlayer(final Player player, final boolean loggedIn) {
         // If on the primary thread, run async
         if (Bukkit.isPrimaryThread()) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    applyTagToPlayer(player, loggedIn);
-                }
-            }.runTaskAsynchronously(plugin);
+            Bukkit.getAsyncScheduler().runNow(plugin, t -> applyTagToPlayer(player, loggedIn));
             return;
         }
 
@@ -385,28 +355,25 @@ public class NametagHandler implements Listener {
         plugin.debug("Applying " + (tempNametag.isPlayerTag() ? "PlayerTag" : "GroupTag") + " to " + player.getName());
 
         final INametag nametag = tempNametag;
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                nametagManager.setNametag(player.getName(), formatWithPlaceholders(player, nametag.getPrefix(), true),
-                        formatWithPlaceholders(player, nametag.getSuffix(), true), nametag.getSortPriority());
-                // If the TabList is disabled...
-                if (!tabListEnabled) {
-                    // apply the default white username to the player.
-                    player.setPlayerListName(Utils.format("&f" + player.getPlayerListName()));
+        player.getScheduler().run(plugin, t -> {
+            nametagManager.setNametag(player.getName(), formatWithPlaceholders(player, nametag.getPrefix(), true),
+                formatWithPlaceholders(player, nametag.getSuffix(), true), nametag.getSortPriority());
+            // If the TabList is disabled...
+            if (!tabListEnabled) {
+                // apply the default white username to the player.
+                player.setPlayerListName(Utils.format("&f" + player.getPlayerListName()));
+            } else {
+                if (longNametagsEnabled) {
+                    player.setPlayerListName(formatWithPlaceholders(player, nametag.getPrefix() + player.getName() + nametag.getSuffix(), false));
                 } else {
-                    if (longNametagsEnabled) {
-                        player.setPlayerListName(formatWithPlaceholders(player, nametag.getPrefix() + player.getName() + nametag.getSuffix(), false));
-                    } else {
-                        player.setPlayerListName(null);
-                    }
-                }
-
-                if (loggedIn) {
-                    Bukkit.getPluginManager().callEvent(new NametagFirstLoadedEvent(player, nametag));
+                    player.setPlayerListName(null);
                 }
             }
-        }.runTask(plugin);
+
+            if (loggedIn) {
+                Bukkit.getPluginManager().callEvent(new NametagFirstLoadedEvent(player, nametag));
+            }
+        }, () -> {});
     }
 
     void clear(final CommandSender sender, final String player) {

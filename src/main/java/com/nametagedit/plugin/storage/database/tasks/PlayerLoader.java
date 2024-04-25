@@ -9,7 +9,6 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import com.nametagedit.plugin.NametagHandler;
 import com.nametagedit.plugin.api.data.PlayerData;
@@ -19,7 +18,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class PlayerLoader extends BukkitRunnable {
+public class PlayerLoader implements Runnable {
 
     private UUID uuid;
     private Plugin plugin;
@@ -58,26 +57,24 @@ public class PlayerLoader extends BukkitRunnable {
             final boolean finalFound = found;
 
             final int finalPriority = priority;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    Player player = Bukkit.getPlayer(uuid);
-                    if (player != null) {
-                        if (finalFound) {
-                            PlayerData data = handler.getPlayerData(player);
-                            if (data == null) {
-                                data = new PlayerData(player.getName(), player.getUniqueId(), prefix, suffix, finalPriority);
-                                handler.storePlayerData(player.getUniqueId(), data);
-                            } else {
-                                data.setPrefix(prefix);
-                                data.setSuffix(suffix);
-                            }
-                        }
 
-                        handler.applyTagToPlayer(player, loggedIn);
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.getScheduler().run(plugin, t -> {
+                    if (finalFound) {
+                        PlayerData data = handler.getPlayerData(player);
+                        if (data == null) {
+                            data = new PlayerData(player.getName(), player.getUniqueId(), prefix, suffix, finalPriority);
+                            handler.storePlayerData(player.getUniqueId(), data);
+                        } else {
+                            data.setPrefix(prefix);
+                            data.setSuffix(suffix);
+                        }
                     }
-                }
-            }.runTask(plugin);
+
+                    handler.applyTagToPlayer(player, loggedIn);
+                }, () -> {});
+            }
         }
     }
 

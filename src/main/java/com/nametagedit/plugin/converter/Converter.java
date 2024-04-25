@@ -2,7 +2,7 @@ package com.nametagedit.plugin.converter;
 
 import com.nametagedit.plugin.NametagMessages;
 import com.nametagedit.plugin.utils.Utils;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;

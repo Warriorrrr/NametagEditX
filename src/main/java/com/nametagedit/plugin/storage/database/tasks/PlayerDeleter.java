@@ -3,7 +3,6 @@ package com.nametagedit.plugin.storage.database.tasks;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +10,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 @AllArgsConstructor
-public class PlayerDeleter extends BukkitRunnable {
+public class PlayerDeleter implements Runnable {
 
     private final UUID uuid;
     private final HikariDataSource hikari;

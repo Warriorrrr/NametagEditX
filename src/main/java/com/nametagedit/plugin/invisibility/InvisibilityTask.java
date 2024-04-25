@@ -4,12 +4,11 @@ import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class InvisibilityTask extends BukkitRunnable {
+public class InvisibilityTask implements Runnable {
 
     @Override
     public void run(){

@@ -208,7 +208,7 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
             if (sourceIsFile && !destinationIsSQL && legacy) {
                 new Converter().legacyConversion(sender, handler.getPlugin());
             } else if ((destinationIsSQL && sourceIsFile) || (!sourceIsFile && !destinationIsSQL)) {
-                new ConverterTask(!destinationIsSQL, sender, handler.getPlugin()).runTaskAsynchronously(handler.getPlugin());
+                handler.getPlugin().getServer().getAsyncScheduler().runNow(handler.getPlugin(), t -> new ConverterTask(!destinationIsSQL, sender, handler.getPlugin()).run());
             }
         }
     }

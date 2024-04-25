@@ -3,7 +3,6 @@ package com.nametagedit.plugin.storage.database.tasks;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +10,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 @AllArgsConstructor
-public class PlayerPriority extends BukkitRunnable {
+public class PlayerPriority implements Runnable {
 
     private final UUID player;
     private final int priority;

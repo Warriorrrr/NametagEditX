@@ -9,7 +9,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,7 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class DataDownloader extends BukkitRunnable {
+public class DataDownloader implements Runnable {
 
     private final List<UUID> players = new ArrayList<>();
     private final NametagHandler handler;
@@ -100,19 +99,15 @@ public class DataDownloader extends BukkitRunnable {
             }
 
             handler.assignData(groupDataUnordered, playerData); // Safely perform assignments
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    for (Player player : Utils.getOnline()) {
-                        PlayerData data = playerData.get(player.getUniqueId());
-                        if (data != null) {
-                            data.setName(player.getName());
-                        }
-                    }
 
-                    handler.applyTags();
+            for (Player player : Utils.getOnline()) {
+                PlayerData data = playerData.get(player.getUniqueId());
+                if (data != null) {
+                    data.setName(player.getName());
                 }
-            }.runTask(handler.getPlugin());
+            }
+
+            handler.applyTags();
         }
     }
 
