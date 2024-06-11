@@ -316,7 +316,7 @@ public class NametagHandler implements Listener {
             m.addCustomChart(new Metrics.SimplePie("using_spigot", () -> PlaceholderAPIPlugin.getServerVersion().isSpigot() ? "yes" : "no"));
         }
 
-        clearEmptyTeamTask = createTask("ClearEmptyTeamsInterval", clearEmptyTeamTask, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nte teams clear"));
+        clearEmptyTeamTask = createTask("ClearEmptyTeamsInterval", clearEmptyTeamTask, () -> Bukkit.getGlobalRegionScheduler().run(plugin, task -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nte teams clear")));
 
         refreshNametagTask = createTask("RefreshInterval", refreshNametagTask, () -> {
             nametagManager.reset();

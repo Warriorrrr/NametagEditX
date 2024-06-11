@@ -11,7 +11,7 @@
     <url>https://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <paper.version>1.20.4-R0.1-SNAPSHOT</paper.version>
+        <paper.version>1.20.5-R0.1-SNAPSHOT</paper.version>
     </properties>
     <dependencies>
         <!--Spigot -->
@@ -144,6 +144,10 @@
         <repository>
             <id>guilds</id>
             <url>https://repo.glaremasters.me/repository/public/</url>
+        </repository>
+        <repository>
+            <id>sonatype-oss-snapshots1</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
     <!-- Builds NametagEdit -->
