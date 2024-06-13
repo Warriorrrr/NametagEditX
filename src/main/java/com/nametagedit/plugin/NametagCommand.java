@@ -7,10 +7,7 @@ import com.nametagedit.plugin.converter.ConverterTask;
 import com.nametagedit.plugin.utils.Utils;
 import lombok.AllArgsConstructor;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabExecutor;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
@@ -119,7 +116,8 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
                         }
                     }
 
-                    NametagMessages.CLEARED_TEAMS.send(sender, emptyTeams, unregister);
+                    if (!(sender instanceof ConsoleCommandSender) || emptyTeams > 0)
+                        NametagMessages.CLEARED_TEAMS.send(sender, emptyTeams, unregister);
                     break;
                 case "priority":
                     cmdPriority(sender, args);
