@@ -44,6 +44,19 @@ public class NametagManager {
 
         reset(player);
 
+        String addingName;
+        Player adding = Bukkit.getPlayerExact(player);
+        if (adding != null)
+            addingName = adding.getName();
+        else {
+            addingName = Bukkit.getOfflinePlayer(player).getName();
+        }
+
+        if (addingName == null)
+            return;
+
+        player = addingName;
+
         FakeTeam joining = getFakeTeam(prefix, suffix, visible);
         if (joining != null) {
             joining.addMember(player);
@@ -57,15 +70,8 @@ public class NametagManager {
             plugin.debug("Created FakeTeam " + joining.getName() + ". Size: " + TEAMS.size());
         }
 
-        Player adding = Bukkit.getPlayerExact(player);
-        if (adding != null) {
-            addPlayerToTeamPackets(joining, adding.getName());
-            cache(adding.getName(), joining);
-        } else {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player);
-            addPlayerToTeamPackets(joining, offlinePlayer.getName());
-            cache(offlinePlayer.getName(), joining);
-        }
+        addPlayerToTeamPackets(joining, player);
+        cache(player, joining);
 
         plugin.debug(player + " has been added to team " + joining.getName());
     }
