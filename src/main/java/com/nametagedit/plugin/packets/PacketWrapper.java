@@ -9,6 +9,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,8 @@ public class PacketWrapper {
     private static Method CraftChatMessage;
     private static Class<? extends Enum> typeEnumChatFormat;
     private static Enum RESET_COLOR;
+
+    private static final Collection<?> NULL = Collections.singleton(null);
 
     static {
         try {
@@ -120,6 +123,12 @@ public class PacketWrapper {
     private void setupMembers(Collection<?> players) {
         try {
             players = players == null || players.isEmpty() ? new ArrayList<>() : players;
+
+            if (players.contains(null)) {
+                players = new ArrayList<>(players); // Ensure mutable
+                players.removeAll(Collections.singleton(null));
+            }
+
             ((Collection) PacketAccessor.MEMBERS.get(packet)).addAll(players);
         } catch (Exception e) {
             error = e.getMessage();
