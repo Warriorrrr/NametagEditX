@@ -88,6 +88,9 @@ public class NametagManager {
                 delete = removePlayerFromTeamPackets(fakeTeam, removing.getName());
             } else {
                 OfflinePlayer toRemoveOffline = Bukkit.getOfflinePlayer(player);
+                if (toRemoveOffline.getName() == null)
+                    return fakeTeam;
+
                 delete = removePlayerFromTeamPackets(fakeTeam, toRemoveOffline.getName());
             }
 

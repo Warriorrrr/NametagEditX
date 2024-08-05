@@ -52,7 +52,7 @@ public class FakeTeam {
     }
 
     public void addMember(String player) {
-        if (!members.contains(player)) {
+        if (!members.contains(player) && player != null) {
             members.add(player);
         }
     }
