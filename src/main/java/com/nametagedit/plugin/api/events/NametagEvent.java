@@ -1,8 +1,6 @@
 package com.nametagedit.plugin.api.events;
 
 import com.nametagedit.plugin.api.data.Nametag;
-import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -17,29 +15,13 @@ public class NametagEvent extends Event implements Cancellable {
 
     private boolean cancelled;
 
-    @Getter
-    @Setter
     @Deprecated
     private String value;
 
-    @Getter
-    @Setter
     private Nametag nametag;
-
-    @Getter
-    @Setter
     private String player;
-
-    @Getter
-    @Setter
     private ChangeType changeType;
-
-    @Getter
-    @Setter
     private ChangeReason changeReason;
-
-    @Getter
-    @Setter
     private StorageType storageType;
 
     public NametagEvent(String player, String value) {
@@ -65,6 +47,54 @@ public class NametagEvent extends Event implements Cancellable {
         this.changeType = changeType;
         this.storageType = storageType;
         this.changeReason = changeReason;
+    }
+
+    public Nametag getNametag() {
+        return nametag;
+    }
+
+    public String getPlayer() {
+        return player;
+    }
+
+    public ChangeType getChangeType() {
+        return changeType;
+    }
+
+    public ChangeReason getChangeReason() {
+        return changeReason;
+    }
+
+    public StorageType getStorageType() {
+        return storageType;
+    }
+
+    public void setNametag(Nametag nametag) {
+        this.nametag = nametag;
+    }
+
+    public void setChangeReason(ChangeReason changeReason) {
+        this.changeReason = changeReason;
+    }
+
+    public void setChangeType(ChangeType changeType) {
+        this.changeType = changeType;
+    }
+
+    public void setPlayer(String player) {
+        this.player = player;
+    }
+
+    public void setStorageType(StorageType storageType) {
+        this.storageType = storageType;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     public static HandlerList getHandlerList() {

@@ -5,22 +5,22 @@ import com.nametagedit.plugin.api.events.NametagEvent;
 import com.nametagedit.plugin.converter.Converter;
 import com.nametagedit.plugin.converter.ConverterTask;
 import com.nametagedit.plugin.utils.Utils;
-import lombok.AllArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@AllArgsConstructor
 public class NametagCommand implements CommandExecutor, TabExecutor {
 
     private final NametagHandler handler;
+
+    public NametagCommand(final NametagHandler handler) {
+        this.handler = handler;
+    }
 
     private List<String> getSuggestions(String argument, String... array) {
         argument = argument.toLowerCase();
@@ -60,7 +60,7 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
                     data.add("add");
                     data.add("remove");
                     data.add("order");
-                    for (GroupData groupData : handler.getGroupData()) {
+                    for (GroupData groupData : handler.getGroupData().values()) {
                         data.add(groupData.getGroupName());
                     }
 
@@ -145,39 +145,39 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
     }
 
     private void sendUsagePlayer(CommandSender sender) {
-        sender.sendMessage(Utils.format("\n&8» &a&lNametagEdit Player Help &8«"));
-        sender.sendMessage(Utils.format("\n\n&8Type a command to get started:"));
-        sender.sendMessage(Utils.format("&8» &a/nte player <Player> clear"));
-        sender.sendMessage(Utils.format("&8» &a/nte player <Player> prefix <Prefix>"));
-        sender.sendMessage(Utils.format("&8» &a/nte player <Player> suffix <Suffix>"));
-        sender.sendMessage(Utils.format("&8» &a/nte player <Player> priority <#>"));
+        sender.sendMessage(Utils.formatLegacy("\n&8» &a&lNametagEdit Player Help &8«"));
+        sender.sendMessage(Utils.formatLegacy("\n\n&8Type a command to get started:"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte player <Player> clear"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte player <Player> prefix <Prefix>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte player <Player> suffix <Suffix>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte player <Player> priority <#>"));
     }
 
     private void sendUsageGroup(CommandSender sender) {
-        sender.sendMessage(Utils.format("\n&8» &a&lNametagEdit Player Help &8«"));
-        sender.sendMessage(Utils.format("\n\n&8Type a command to get started:"));
-        sender.sendMessage(Utils.format("&8» &a/nte group list"));
-        sender.sendMessage(Utils.format("&8» &a/nte group add <Group>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group remove <Group>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group order <Owner Admin Mod Etc...>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group <Group> clear <prefix/suffix>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group <Group> prefix <Prefix>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group <Group> suffix <Suffix>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group <Group> permission <Permission>"));
-        sender.sendMessage(Utils.format("&8» &a/nte group <Group> priority <#>"));
+        sender.sendMessage(Utils.formatLegacy("\n&8» &a&lNametagEdit Player Help &8«"));
+        sender.sendMessage(Utils.formatLegacy("\n\n&8Type a command to get started:"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group list"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group add <Group>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group remove <Group>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group order <Owner Admin Mod Etc...>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group <Group> clear <prefix/suffix>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group <Group> prefix <Prefix>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group <Group> suffix <Suffix>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group <Group> permission <Permission>"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group <Group> priority <#>"));
     }
 
     private void sendUsage(CommandSender sender) {
-        sender.sendMessage(Utils.format("\n&8» &a&lNametagEdit Plugin Help &8«"));
-        sender.sendMessage(Utils.format("     by Cory and sgtcaze"));
-        sender.sendMessage(Utils.format("\n\n&8Type a command to get started:"));
-        sender.sendMessage(Utils.format("&8» &a/nte debug"));
-        sender.sendMessage(Utils.format("&8» &a/nte reload"));
-        sender.sendMessage(Utils.format("&8» &a/nte convert"));
-        sender.sendMessage(Utils.format("&8» &a/nte player"));
-        sender.sendMessage(Utils.format("&8» &a/nte group"));
-        sender.sendMessage(Utils.format("&8» &a/nte priority"));
-        sender.sendMessage(Utils.format("&8» &a/nte longtags"));
+        sender.sendMessage(Utils.formatLegacy("\n&8» &a&lNametagEdit Plugin Help &8«"));
+        sender.sendMessage(Utils.formatLegacy("     by Cory and sgtcaze"));
+        sender.sendMessage(Utils.formatLegacy("\n\n&8Type a command to get started:"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte debug"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte reload"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte convert"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte player"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte group"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte priority"));
+        sender.sendMessage(Utils.formatLegacy("&8» &a/nte longtags"));
     }
 
     /**
@@ -304,9 +304,9 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
             sendUsageGroup(sender);
         } else {
             if (args[1].equalsIgnoreCase("list")) {
-                sender.sendMessage(Utils.format("&f&lLoaded Groups"));
-                for (GroupData groupData : handler.getGroupData()) {
-                    sender.sendMessage(Utils.format("&6Group: &f" + groupData.getGroupName() + " &6Permission: &f" + groupData.getPermission()
+                sender.sendMessage(Utils.formatLegacy("&f&lLoaded Groups"));
+                for (GroupData groupData : handler.getGroupData().values()) {
+                    sender.sendMessage(Utils.formatLegacy("&6Group: &f" + groupData.getGroupName() + " &6Permission: &f" + groupData.getPermission()
                             + " &6Formatted: " + groupData.getPrefix() + sender.getName() + groupData.getSuffix()));
                 }
             } else if (args[1].equalsIgnoreCase("order")) {
@@ -320,21 +320,14 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
 
                 String formatted = Arrays.toString(order.toArray());
                 formatted = formatted.substring(1, formatted.length() - 1).replace(",", "");
-                sender.sendMessage(Utils.format("&c&lNametagEdit Group Order:"));
+                sender.sendMessage(Utils.formatLegacy("&c&lNametagEdit Group Order:"));
                 sender.sendMessage(formatted);
-                sender.sendMessage(Utils.format("&cType /ne reload for these changes to take effect"));
+                sender.sendMessage(Utils.formatLegacy("&cType /ne reload for these changes to take effect"));
             } else if (args[1].equalsIgnoreCase("remove")) {
                 if (args.length == 3) {
                     String group = args[2];
 
-                    GroupData toDelete = null;
-                    for (GroupData groupData : handler.getGroupData()) {
-                        if (groupData.getGroupName().equalsIgnoreCase(group)) {
-                            toDelete = groupData;
-                            break;
-
-                        }
-                    }
+                    GroupData toDelete = handler.getGroupData(group);
 
                     if (toDelete != null) {
                         handler.deleteGroup(toDelete);
@@ -345,27 +338,18 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
                 if (args.length == 3) {
                     String group = args[2];
 
-                    for (GroupData groupData : handler.getGroupData()) {
-                        if (groupData.getGroupName().equalsIgnoreCase(group)) {
-                            NametagMessages.GROUP_EXISTS.send(sender, group);
-                            return;
-                        }
+                    if (handler.getGroupData(group) != null) {
+                        NametagMessages.GROUP_EXISTS.send(sender, group);
+                        return;
                     }
 
-                    handler.addGroup(new GroupData(group, "", "", "", new Permission("my.perm", PermissionDefault.FALSE), -1));
+                    handler.addGroup(new GroupData(group, "", "", "my.perm", -1));
                     NametagMessages.CREATED_GROUP.send(sender, group);
                 }
             } else {
                 if (args.length >= 4) {
                     String group = args[1];
-                    GroupData groupData = null;
-
-                    for (GroupData groups : handler.getGroupData()) {
-                        if (groups.getGroupName().equalsIgnoreCase(group)) {
-                            groupData = groups;
-                            break;
-                        }
-                    }
+                    GroupData groupData = handler.getGroupData(group);
 
                     if (groupData == null) {
                         NametagMessages.GROUP_EXISTS_NOT.send(sender, group);
@@ -378,16 +362,16 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
                         NametagMessages.GROUP_VALUE.send(sender, group, "permission", args[3]);
                     } else if (args[2].equalsIgnoreCase("prefix")) {
                         String value = Utils.format(args, 3, args.length).replace("\"", "");
-                        groupData.setPrefix(Utils.format(value));
+                        groupData.setPrefix(Utils.formatLegacy(value));
                         handler.applyTags();
                         handler.getAbstractConfig().save(groupData);
-                        NametagMessages.GROUP_VALUE.send(sender, group, "prefix", Utils.format(value));
+                        NametagMessages.GROUP_VALUE.send(sender, group, "prefix", Utils.formatLegacy(value));
                     } else if (args[2].equalsIgnoreCase("suffix")) {
                         String value = Utils.format(args, 3, args.length).replace("\"", "");
-                        groupData.setSuffix(Utils.format(value));
+                        groupData.setSuffix(Utils.formatLegacy(value));
                         handler.applyTags();
                         handler.getAbstractConfig().save(groupData);
-                        NametagMessages.GROUP_VALUE.send(sender, group, "suffix", Utils.format(value));
+                        NametagMessages.GROUP_VALUE.send(sender, group, "suffix", Utils.formatLegacy(value));
                     } else if (args[2].equalsIgnoreCase("clear")) {
                         boolean prefix = args[3].equalsIgnoreCase("prefix");
                         if (prefix) {

@@ -7,6 +7,7 @@ import com.nametagedit.plugin.api.data.PlayerData;
 import com.nametagedit.plugin.storage.AbstractConfig;
 import com.nametagedit.plugin.utils.UUIDFetcher;
 import com.nametagedit.plugin.utils.Utils;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,8 +15,10 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class FlatFileConfig implements AbstractConfig {
@@ -101,13 +104,10 @@ public class FlatFileConfig implements AbstractConfig {
                 return;
             }
 
-            UUIDFetcher.lookupUUID(key, plugin, new UUIDFetcher.UUIDLookup() {
-                @Override
-                public void response(UUID uuid) {
-                    if (players.contains("Players." + uuid.toString())) {
-                        players.set("Players." + uuid, priority);
-                        save(players, playersFile);
-                    }
+            UUIDFetcher.lookupUUID(key, plugin, uuid -> {
+                if (players.contains("Players." + uuid.toString())) {
+                    players.set("Players." + uuid, priority);
+                    save(players, playersFile);
                 }
             });
         }
@@ -141,7 +141,7 @@ public class FlatFileConfig implements AbstractConfig {
             }
         }
 
-        for (GroupData groupData : handler.getGroupData()) {
+        for (GroupData groupData : handler.getGroupData().values()) {
             if (!groups.contains("Groups." + groupData.getGroupName())) {
                 storeGroup(groupData);
             }
@@ -161,7 +161,6 @@ public class FlatFileConfig implements AbstractConfig {
     private void loadPlayerTag(Player player) {
         PlayerData data = PlayerData.fromFile(player.getUniqueId().toString(), players);
         if (data != null) {
-            data.setName(player.getName());
             handler.storePlayerData(player.getUniqueId(), data);
         }
     }
@@ -173,15 +172,22 @@ public class FlatFileConfig implements AbstractConfig {
     }
 
     private void loadGroups() {
-        List<GroupData> groupData = new ArrayList<>();
+        Map<String, GroupData> groupData = new HashMap<>();
         for (String groupName : groups.getConfigurationSection("Groups").getKeys(false)) {
-            GroupData data = new GroupData();
-            data.setGroupName(groupName);
-            data.setPermission(groups.getString("Groups." + groupName + ".Permission", "nte.default"));
-            data.setPrefix(groups.getString("Groups." + groupName + ".Prefix", ""));
-            data.setSuffix(groups.getString("Groups." + groupName + ".Suffix", ""));
-            data.setSortPriority(groups.getInt("Groups." + groupName + ".SortPriority", -1));
-            groupData.add(data);
+            GroupData data = new GroupData(
+                    groupName,
+                    groups.getString("Groups." + groupName + ".Prefix", ""),
+                    groups.getString("Groups." + groupName + ".Suffix", ""),
+                    groups.getString("Groups." + groupName + ".Permission", "nte.default"),
+                    groups.getInt("Groups." + groupName + ".SortPriority", -1)
+            );
+
+            String formattingOverride = groups.getString("Groups." + groupName + ".NameFormattingOverride", "");
+            if (!formattingOverride.isEmpty()) {
+                data.setNameFormattingOverride(NamedTextColor.NAMES.value(formattingOverride.toLowerCase(Locale.ROOT)));
+            }
+
+            groupData.put(groupName, data);
         }
 
         handler.assignGroupData(groupData);

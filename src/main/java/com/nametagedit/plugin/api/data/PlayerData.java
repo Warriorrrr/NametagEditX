@@ -1,8 +1,5 @@
 package com.nametagedit.plugin.api.data;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.UUID;
@@ -11,9 +8,6 @@ import java.util.UUID;
  * This class represents a player nametag. There
  * are several properties available.
  */
-@Getter
-@Setter
-@AllArgsConstructor
 public class PlayerData implements INametag {
 
     private String name;
@@ -22,19 +16,24 @@ public class PlayerData implements INametag {
     private String suffix;
     private int sortPriority;
 
-    public PlayerData() {
-
+    public PlayerData(final String name, final UUID uuid, final String prefix, final String suffix, final int sortPriority) {
+        this.name = name;
+        this.uuid = uuid;
+        this.prefix = prefix;
+        this.suffix = suffix;
+        this.sortPriority = sortPriority;
     }
 
     public static PlayerData fromFile(String key, YamlConfiguration file) {
         if (!file.contains("Players." + key)) return null;
-        PlayerData data = new PlayerData();
-        data.setUuid(UUID.fromString(key));
-        data.setName(file.getString("Players." + key + ".Name"));
-        data.setPrefix(file.getString("Players." + key + ".Prefix", ""));
-        data.setSuffix(file.getString("Players." + key + ".Suffix", ""));
-        data.setSortPriority(file.getInt("Players." + key + ".SortPriority", -1));
-        return data;
+
+        return new PlayerData(
+                file.getString("Players." + key + ".Name"),
+                UUID.fromString(key),
+                file.getString("Players." + key + ".Prefix", ""),
+                file.getString("Players." + key + ".Suffix", ""),
+                file.getInt("Players." + key + ".SortPriority", -1)
+        );
     }
 
     @Override
@@ -42,4 +41,46 @@ public class PlayerData implements INametag {
         return true;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    @Override
+    public String getPrefix() {
+        return prefix;
+    }
+
+    @Override
+    public String getSuffix() {
+        return suffix;
+    }
+
+    @Override
+    public int getSortPriority() {
+        return sortPriority;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
+    }
+
+    public void setSortPriority(int sortPriority) {
+        this.sortPriority = sortPriority;
+    }
 }

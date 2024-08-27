@@ -1,32 +1,36 @@
 package com.nametagedit.plugin;
 
 import com.nametagedit.plugin.api.data.FakeTeam;
-import com.nametagedit.plugin.packets.PacketWrapper;
-import lombok.AllArgsConstructor;
+import com.nametagedit.plugin.packets.Packets;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@AllArgsConstructor
 public class NametagManager {
 
     private final Map<String, FakeTeam> TEAMS = new ConcurrentHashMap<>();
     private final Map<String, FakeTeam> CACHED_FAKE_TEAMS = new ConcurrentHashMap<>();
     private final NametagEdit plugin;
 
+    public NametagManager(final NametagEdit plugin) {
+        this.plugin = plugin;
+    }
+
     /**
      * Gets the current team given a prefix and suffix
      * If there is no team similar to this, then a new
      * team is created.
      */
-    private FakeTeam getFakeTeam(String prefix, String suffix, boolean visible) {
+    private FakeTeam getFakeTeam(Component prefix, Component suffix, boolean visible) {
         return TEAMS.values().stream().filter(fakeTeam -> fakeTeam.isSimilar(prefix, suffix, visible)).findFirst().orElse(null);
     }
 
@@ -34,7 +38,7 @@ public class NametagManager {
      * Adds a player to a FakeTeam. If they are already on this team,
      * we do NOT change that.
      */
-    private void addPlayerToTeam(String player, String prefix, String suffix, int sortPriority, boolean playerTag, boolean visible) {
+    private void addPlayerToTeam(String player, Component prefix, Component suffix, int sortPriority, boolean playerTag, boolean visible, NamedTextColor nameFormattingOverride) {
         FakeTeam previous = getFakeTeam(player);
 
         if (previous != null && previous.isSimilar(prefix, suffix, visible)) {
@@ -62,9 +66,10 @@ public class NametagManager {
             joining.addMember(player);
             plugin.debug("Using existing team for " + player);
         } else {
-            joining = new FakeTeam(prefix, suffix, sortPriority, playerTag);
+            joining = FakeTeam.create(prefix, suffix, sortPriority, playerTag);
             joining.setVisible(visible);
             joining.addMember(player);
+            joining.setNameFormattingOverride(nameFormattingOverride);
             TEAMS.put(joining.getName(), joining);
             addTeamPackets(joining);
             plugin.debug("Created FakeTeam " + joining.getName() + ". Size: " + TEAMS.size());
@@ -81,7 +86,7 @@ public class NametagManager {
     }
 
     private FakeTeam reset(String player, FakeTeam fakeTeam) {
-        if (fakeTeam != null && fakeTeam.getMembers().remove(player)) {
+        if (fakeTeam != null && fakeTeam.removeMember(player)) {
             boolean delete;
             Player removing = Bukkit.getPlayerExact(player);
             if (removing != null) {
@@ -123,60 +128,68 @@ public class NametagManager {
     // ==============================================================
     // Below are public methods to modify certain data
     // ==============================================================
-    public void setNametag(String player, String prefix, String suffix) {
+    public void setNametag(String player, Component prefix, Component suffix) {
         setNametag(player, prefix, suffix, -1);
     }
 
-    public void setNametag(String player, String prefix, String suffix, boolean visible) {
-        setNametag(player, prefix, suffix, -1, false, visible);
+    public void setNametag(String player, Component prefix, Component suffix, boolean visible) {
+        setNametag(player, prefix, suffix, -1, false, visible, null);
     }
 
-    void setNametag(String player, String prefix, String suffix, int sortPriority) {
-        setNametag(player, prefix, suffix, sortPriority, false, true);
+    void setNametag(String player, Component prefix, Component suffix, int sortPriority) {
+        setNametag(player, prefix, suffix, sortPriority, false, true, null);
     }
 
-    void setNametag(String player, String prefix, String suffix, int sortPriority, boolean playerTag, boolean visible) {
-        addPlayerToTeam(player, prefix != null ? prefix : "", suffix != null ? suffix : "", sortPriority, playerTag, visible);
+    void setNametag(String player, Component prefix, Component suffix, int sortPriority, boolean playerTag, boolean visible, NamedTextColor nameFormattingOverride) { // TODO something to make these overloads less ridiculous
+        addPlayerToTeam(player, prefix != null ? prefix : Component.empty(), suffix != null ? suffix : Component.empty(), sortPriority, playerTag, visible, nameFormattingOverride);
     }
 
     void sendTeams(Player player) {
-        for (FakeTeam fakeTeam : TEAMS.values()) {
-            new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 0, fakeTeam.getMembers(), fakeTeam.isVisible()).send(player);
+        List<Player> list = List.of(player);
+
+        synchronized (TEAMS) {
+            for (FakeTeam fakeTeam : TEAMS.values()) {
+                Packets.send(list, ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
+            }
         }
     }
 
     void reset() {
-        for (FakeTeam fakeTeam : TEAMS.values()) {
-            removePlayerFromTeamPackets(fakeTeam, fakeTeam.getMembers());
-            removeTeamPackets(fakeTeam);
+        synchronized (TEAMS) {
+            for (FakeTeam fakeTeam : TEAMS.values()) {
+                removePlayerFromTeamPackets(fakeTeam, fakeTeam.getMembers());
+                removeTeamPackets(fakeTeam);
+            }
+
+            CACHED_FAKE_TEAMS.clear();
+            TEAMS.clear();
         }
-        CACHED_FAKE_TEAMS.clear();
-        TEAMS.clear();
     }
 
     // ==============================================================
     // Below are private methods to construct a new Scoreboard packet
     // ==============================================================
     private void removeTeamPackets(FakeTeam fakeTeam) {
-        new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 1, new ArrayList<>(), fakeTeam.isVisible()).send();
+        Packets.broadcast(ClientboundSetPlayerTeamPacket.createRemovePacket(fakeTeam));
     }
 
     private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, String... players) {
         return removePlayerFromTeamPackets(fakeTeam, Arrays.asList(players));
     }
 
-    private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, List<String> players) {
-        new PacketWrapper(fakeTeam.getName(), 4, players).send();
-        fakeTeam.getMembers().removeAll(players);
+    private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, Collection<String> players) {
+        ClientboundSetPlayerTeamPacket packet = ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, players, ClientboundSetPlayerTeamPacket.Action.REMOVE);
+        Packets.broadcast(packet);
+
         return fakeTeam.getMembers().isEmpty();
     }
 
     private void addTeamPackets(FakeTeam fakeTeam) {
-        new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 0, fakeTeam.getMembers(), fakeTeam.isVisible()).send();
+        Packets.broadcast(ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
     }
 
     private void addPlayerToTeamPackets(FakeTeam fakeTeam, String player) {
-        new PacketWrapper(fakeTeam.getName(), 3, Collections.singletonList(player)).send();
+        Packets.broadcast(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, List.of(player), ClientboundSetPlayerTeamPacket.Action.ADD));
     }
 
 }

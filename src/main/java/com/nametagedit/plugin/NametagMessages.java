@@ -1,11 +1,8 @@
 package com.nametagedit.plugin;
 
 import com.nametagedit.plugin.utils.Utils;
-import lombok.AllArgsConstructor;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
-@AllArgsConstructor
 public enum NametagMessages {
 
     SET_PRIORITY("Set sort priority to %s for %s"),
@@ -30,9 +27,13 @@ public enum NametagMessages {
 
     private final String text;
 
+    NametagMessages(final String text) {
+        this.text = text;
+    }
+
     @Override
     public String toString() {
-        return Utils.color("&8» &a" + text);
+        return Utils.colorLegacy("&8» &a" + text);
     }
 
     public void send(CommandSender sender) {
@@ -40,7 +41,7 @@ public enum NametagMessages {
     }
 
     public void send(CommandSender sender, String replacement) {
-        sender.sendMessage(toString().replace("%s", Utils.format(replacement)));
+        sender.sendMessage(toString().replace("%s", Utils.formatLegacy(replacement)));
     }
 
     public void send(CommandSender sender, Object... object) {

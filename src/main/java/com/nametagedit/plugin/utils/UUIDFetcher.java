@@ -2,6 +2,7 @@ package com.nametagedit.plugin.utils;
 
 import com.google.common.collect.ImmutableList;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -13,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 /**
  * This class is responsible for retrieving UUIDs from Names
@@ -36,7 +38,14 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
         this(names, true);
     }
 
-    public static void lookupUUID(final String name, final Plugin plugin, final UUIDLookup uuidLookup) {
+    public static void lookupUUID(final String name, final Plugin plugin, final Consumer<UUID> result) {
+        // Check our cache first
+        final OfflinePlayer cached = plugin.getServer().getOfflinePlayerIfCached(name);
+        if (cached != null) {
+            result.accept(cached.getUniqueId());
+            return;
+        }
+
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             UUID response = null;
             try {
@@ -45,7 +54,8 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
                 // Swallow
             }
 
-            uuidLookup.response(response);
+            if (response != null)
+                result.accept(response);
         });
     }
 
@@ -100,9 +110,4 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
         }
         return uuidMap;
     }
-
-    public interface UUIDLookup {
-        void response(UUID uuid);
-    }
-
 }

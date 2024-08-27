@@ -7,14 +7,13 @@ import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.utils.Utils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionDefault;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DataDownloader implements Runnable {
 
@@ -45,7 +44,6 @@ public class DataDownloader implements Runnable {
                         results.getString("prefix"),
                         results.getString("suffix"),
                         results.getString("permission"),
-                        new Permission(results.getString("permission"), PermissionDefault.FALSE),
                         results.getInt("priority")
                 ));
             }
@@ -58,8 +56,8 @@ public class DataDownloader implements Runnable {
                     playerData.put(uuid, new PlayerData(
                             "",
                             uuid,
-                            Utils.format(results.getString("prefix"), true),
-                            Utils.format(results.getString("suffix"), true),
+                            Utils.formatLegacy(results.getString("prefix"), true),
+                            Utils.formatLegacy(results.getString("suffix"), true),
                             results.getInt("priority")
                     ));
                 }
@@ -98,7 +96,9 @@ public class DataDownloader implements Runnable {
                 groupDataUnordered = current; // Reassign the new group order
             }
 
-            handler.assignData(groupDataUnordered, playerData); // Safely perform assignments
+            Map<String, GroupData> map = groupDataUnordered.stream().collect(Collectors.toMap(GroupData::getGroupName, data -> data));
+
+            handler.assignData(map, playerData); // Safely perform assignments
 
             for (Player player : Utils.getOnline()) {
                 PlayerData data = playerData.get(player.getUniqueId());

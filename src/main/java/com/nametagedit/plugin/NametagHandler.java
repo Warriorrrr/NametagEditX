@@ -5,18 +5,18 @@ import com.nametagedit.plugin.api.data.INametag;
 import com.nametagedit.plugin.api.data.PlayerData;
 import com.nametagedit.plugin.api.events.NametagEvent;
 import com.nametagedit.plugin.api.events.NametagFirstLoadedEvent;
-import com.nametagedit.plugin.metrics.Metrics;
 import com.nametagedit.plugin.storage.AbstractConfig;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.storage.flatfile.FlatFileConfig;
+import com.nametagedit.plugin.utils.Colors;
 import com.nametagedit.plugin.utils.Configuration;
 import com.nametagedit.plugin.utils.UUIDFetcher;
 import com.nametagedit.plugin.utils.Utils;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import me.clip.placeholderapi.PlaceholderAPIPlugin;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -28,43 +28,35 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-@Getter
-@Setter
 public class NametagHandler implements Listener {
-
-    // Multiple threads access resources. We need to make sure we avoid concurrency issues.
-    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     public static boolean DISABLE_PUSH_ALL_TAGS = false;
     private boolean debug;
-    @Getter(AccessLevel.NONE)
+
     private boolean tabListEnabled;
     private boolean longNametagsEnabled;
     private boolean refreshTagOnWorldChange;
 
     private ScheduledTask clearEmptyTeamTask;
     private ScheduledTask refreshNametagTask;
-    private AbstractConfig abstractConfig;
+    private final AbstractConfig abstractConfig;
 
-    private Configuration config;
+    private final Configuration config;
 
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private List<GroupData> groupData = new ArrayList<>();
+    private final Map<String, GroupData> groupData = new HashMap<>();
+    private final Map<UUID, PlayerData> playerData = new HashMap<>();
 
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private Map<UUID, PlayerData> playerData = new HashMap<>();
-
-    private NametagEdit plugin;
-    private NametagManager nametagManager;
+    private final NametagEdit plugin;
+    private final NametagManager nametagManager;
 
     public NametagHandler(NametagEdit plugin, NametagManager nametagManager) {
         this.config = getCustomConfig(plugin);
@@ -153,49 +145,40 @@ public class NametagHandler implements Listener {
     }
 
     public void clearMemoryData() {
-        try {
-            readWriteLock.writeLock().lock();
-            groupData.clear();
-            playerData.clear();
-        } finally {
-            readWriteLock.writeLock().unlock();
+        synchronized (this.groupData) {
+            this.groupData.clear();
+        }
+
+        synchronized (this.playerData) {
+            this.playerData.clear();
         }
     }
 
     public void removePlayerData(UUID uuid) {
-        try {
-            readWriteLock.writeLock().lock();
-            playerData.remove(uuid);
-        } finally {
-            readWriteLock.writeLock().unlock();
+        synchronized (this.playerData) {
+            this.playerData.remove(uuid);
         }
     }
 
     public void storePlayerData(UUID uuid, PlayerData data) {
-        try {
-            readWriteLock.writeLock().lock();
-            playerData.put(uuid, data);
-        } finally {
-            readWriteLock.writeLock().unlock();
+        synchronized (this.playerData) {
+            this.playerData.put(uuid, data);
         }
     }
 
-    public void assignGroupData(List<GroupData> groupData) {
-        try {
-            readWriteLock.writeLock().lock();
-            this.groupData = groupData;
-        } finally {
-            readWriteLock.writeLock().unlock();
+    public void assignGroupData(Map<String, GroupData> groupData) {
+        synchronized (this.groupData) {
+            this.groupData.clear();
+            this.groupData.putAll(groupData);
         }
     }
 
-    public void assignData(List<GroupData> groupData, Map<UUID, PlayerData> playerData) {
-        try {
-            readWriteLock.writeLock().lock();
-            this.groupData = groupData;
-            this.playerData = playerData;
-        } finally {
-            readWriteLock.writeLock().unlock();
+    public void assignData(Map<String, GroupData> groupData, Map<UUID, PlayerData> playerData) {
+        assignGroupData(groupData);
+
+        synchronized (this.playerData) {
+            this.playerData.clear();
+            this.playerData.putAll(playerData);
         }
     }
 
@@ -229,42 +212,30 @@ public class NametagHandler implements Listener {
     void addGroup(GroupData data) {
         abstractConfig.add(data);
 
-        try {
-            readWriteLock.writeLock().lock();
-            groupData.add(data);
-        } finally {
-            readWriteLock.writeLock().unlock();
+        synchronized (this.groupData) {
+            this.groupData.put(data.getGroupName(), data);
         }
     }
 
     void deleteGroup(GroupData data) {
         abstractConfig.delete(data);
 
-        try {
-            readWriteLock.writeLock().lock();
-            groupData.remove(data);
-        } finally {
-            readWriteLock.writeLock().unlock();
+        synchronized (this.groupData) {
+            this.groupData.remove(data.getGroupName());
         }
     }
 
-    public List<GroupData> getGroupData() {
-        try {
-            readWriteLock.writeLock().lock();
-            return new ArrayList<>(groupData); // Create a copy instead of unmodifiable
-        } finally {
-            readWriteLock.writeLock().unlock();
+    @Unmodifiable
+    public Map<String, GroupData> getGroupData() {
+        synchronized (this.groupData) {
+            return Collections.unmodifiableMap(this.groupData);
         }
     }
 
-    public GroupData getGroupData(String key) {
-        for (GroupData groupData : getGroupData()) {
-            if (groupData.getGroupName().equalsIgnoreCase(key)) {
-                return groupData;
-            }
+    public GroupData getGroupData(String groupName) {
+        synchronized (this.groupData) {
+            return this.groupData.get(groupName);
         }
-
-        return null;
     }
 
     /**
@@ -273,19 +244,18 @@ public class NametagHandler implements Listener {
      * is replaced. We use direct imports to avoid any problems!
      * (So don't change that)
      */
-    public String formatWithPlaceholders(Player player, String input, boolean limitChars) {
+    public Component formatWithPlaceholders(Player player, String input) {
         plugin.debug("Formatting text..");
-        if (input == null) return "";
-        if (player == null) return input;
+        if (input == null) return Component.empty();
+        if (player == null) return Colors.color(input);
 
-        // The string can become null again at this point. Add another check.
-        if (input != null && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             plugin.debug("Trying to use PlaceholderAPI for placeholders");
-            input = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, input);
+            input = PlaceholderAPI.setPlaceholders(player, input);
         }
 
         plugin.debug("Applying colors..");
-        return Utils.format(input, limitChars);
+        return Colors.color(input);
     }
 
     private ScheduledTask createTask(String path, ScheduledTask existing, Runnable runnable) {
@@ -310,11 +280,6 @@ public class NametagHandler implements Listener {
         this.longNametagsEnabled = config.getBoolean("Tablist.LongTags");
         this.refreshTagOnWorldChange = config.getBoolean("RefreshTagOnWorldChange");
         DISABLE_PUSH_ALL_TAGS = config.getBoolean("DisablePush");
-
-        if (config.getBoolean("MetricsEnabled")) {
-            Metrics m = new Metrics(NametagEdit.getPlugin(NametagEdit.class));
-            m.addCustomChart(new Metrics.SimplePie("using_spigot", () -> PlaceholderAPIPlugin.getServerVersion().isSpigot() ? "yes" : "no"));
-        }
 
         clearEmptyTeamTask = createTask("ClearEmptyTeamsInterval", clearEmptyTeamTask, () -> Bukkit.getGlobalRegionScheduler().run(plugin, task -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nte teams clear")));
 
@@ -343,7 +308,7 @@ public class NametagHandler implements Listener {
 
         INametag tempNametag = getPlayerData(player);
         if (tempNametag == null) {
-            for (GroupData group : getGroupData()) {
+            for (GroupData group : getGroupData().values()) {
                 if (player.hasPermission(group.getBukkitPermission())) {
                     tempNametag = group;
                     break;
@@ -356,17 +321,18 @@ public class NametagHandler implements Listener {
 
         final INametag nametag = tempNametag;
         player.getScheduler().run(plugin, t -> {
-            nametagManager.setNametag(player.getName(), formatWithPlaceholders(player, nametag.getPrefix(), true),
-                formatWithPlaceholders(player, nametag.getSuffix(), true), nametag.getSortPriority());
+            nametagManager.setNametag(player.getName(), formatWithPlaceholders(player, nametag.getPrefix()),
+                formatWithPlaceholders(player, nametag.getSuffix()), nametag.getSortPriority(), false, true, nametag.nameFormattingOverride());
+
             // If the TabList is disabled...
             if (!tabListEnabled) {
                 // apply the default white username to the player.
-                player.setPlayerListName(Utils.format("&f" + player.getPlayerListName()));
+                player.playerListName(Component.text(PlainTextComponentSerializer.plainText().serialize(player.playerListName()), NamedTextColor.WHITE));
             } else {
                 if (longNametagsEnabled) {
-                    player.setPlayerListName(formatWithPlaceholders(player, nametag.getPrefix() + player.getName() + nametag.getSuffix(), false));
+                    player.playerListName(formatWithPlaceholders(player, nametag.getPrefix() + player.getName() + nametag.getSuffix()));
                 } else {
-                    player.setPlayerListName(null);
+                    player.playerListName(null);
                 }
             }
 
@@ -472,7 +438,6 @@ public class NametagHandler implements Listener {
 
         if (player != null) {
             applyTagToPlayer(player, false);
-            data.setUuid(player.getUniqueId());
             abstractConfig.save(data);
             return;
         }
@@ -484,11 +449,32 @@ public class NametagHandler implements Listener {
             }
             else {
                 storePlayerData(uuid, finalData);
-                finalData.setUuid(uuid);
                 abstractConfig.save(finalData);
             }
         });
     }
 
+    public boolean isLongNametagsEnabled() {
+        return longNametagsEnabled;
+    }
 
+    public AbstractConfig getAbstractConfig() {
+        return abstractConfig;
+    }
+
+    public Configuration getConfig() {
+        return config;
+    }
+
+    public Map<UUID, PlayerData> getPlayerData() {
+        return playerData;
+    }
+
+    public NametagEdit getPlugin() {
+        return plugin;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
 }
