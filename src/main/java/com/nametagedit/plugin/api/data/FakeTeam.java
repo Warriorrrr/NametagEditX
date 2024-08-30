@@ -2,7 +2,9 @@ package com.nametagedit.plugin.api.data;
 
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentIteratorType;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Team;
@@ -12,6 +14,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -30,10 +33,12 @@ public class FakeTeam extends PlayerTeam {
     private Component suffix;
     private boolean visible = true;
 
+    private ChatFormatting computedNameFormatting = ChatFormatting.RESET;
     private NamedTextColor nameFormattingOverride = null;
 
     private FakeTeam(String name, Component prefix, Component suffix) {
-        super(null, name);
+        //noinspection DataFlowIssue
+        super(null, name); // null is passed here as the scoreboard, but this class overrides used methods that may require it
         this.name = name;
 
         setPrefix(prefix);
@@ -105,12 +110,23 @@ public class FakeTeam extends PlayerTeam {
     @Override
     @NotNull
     public ChatFormatting getColor() {
+        return this.computedNameFormatting;
+    }
+
+    @NotNull
+    private ChatFormatting computeNameFormatting() {
         if (this.nameFormattingOverride != null) {
-            return PaperAdventure.asVanilla(this.nameFormattingOverride);
-        } else if (this.prefix.color() != null) {
-            return PaperAdventure.asVanilla(Objects.requireNonNull(this.prefix.color()));
-        } else
+            return Objects.requireNonNullElse(PaperAdventure.asVanilla(this.nameFormattingOverride), ChatFormatting.RESET);
+        } else if (!Component.empty().equals(this.prefix)) {
+
+            Style lastStyle = Style.empty();
+            for (Component child : this.prefix.iterable(ComponentIteratorType.DEPTH_FIRST))
+                lastStyle = child.style();
+
+            return Optional.ofNullable(lastStyle.color()).map(NamedTextColor::nearestTo).map(PaperAdventure::asVanilla).orElse(ChatFormatting.RESET);
+        } else {
             return ChatFormatting.RESET;
+        }
     }
 
     public void setNameFormattingOverride(NamedTextColor nameFormattingOverride) {
@@ -123,6 +139,7 @@ public class FakeTeam extends PlayerTeam {
 
     public void setPrefix(@NotNull Component prefix) {
         this.prefix = prefix;
+        this.computedNameFormatting = computeNameFormatting();
     }
 
     public Component getSuffix() {
@@ -150,11 +167,8 @@ public class FakeTeam extends PlayerTeam {
         if (input < 0) return "Z";
         char letter = (char) ((input / 5) + 65);
         int repeat = input % 5 + 1;
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < repeat; i++) {
-            builder.append(letter);
-        }
-        return builder.toString();
+
+        return String.valueOf(letter).repeat(repeat);
     }
 
 }
