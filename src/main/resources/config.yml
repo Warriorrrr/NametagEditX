@@ -10,12 +10,6 @@
 Tablist:
   # If Enabled, NametagEdit will format the Tab menu
   Enabled: true
-  # !! EXPERIMENTAL !!
-  # This feature will use the PlayerListName to set your
-  # nametag. It will allow you to bypass the 16 character limit
-  # for prefix/suffix. Be warned: This does not work on earlier versions
-  # of Minecraft. Please report issues to our GitHub, and we'll try to help.
-  LongTags: false
 #
 # If enabled, this plugin will send small data MCStats.org.
 MetricsEnabled: true

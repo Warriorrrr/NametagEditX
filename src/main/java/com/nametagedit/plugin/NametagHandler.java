@@ -43,7 +43,6 @@ public class NametagHandler implements Listener {
     private boolean debug;
 
     private boolean tabListEnabled;
-    private boolean longNametagsEnabled;
     private boolean refreshTagOnWorldChange;
 
     private ScheduledTask clearEmptyTeamTask;
@@ -195,12 +194,6 @@ public class NametagHandler implements Listener {
         config.save();
     }
 
-    void toggleLongTags() {
-        longNametagsEnabled = !longNametagsEnabled;
-        config.set("Tablist.LongTags", longNametagsEnabled);
-        config.save();
-    }
-
     // =================================================
     // Below are methods that we have to be careful with
     // as they can be called from different threads
@@ -277,7 +270,6 @@ public class NametagHandler implements Listener {
     private void applyConfig() {
         this.debug = config.getBoolean("Debug");
         this.tabListEnabled = config.getBoolean("Tablist.Enabled");
-        this.longNametagsEnabled = config.getBoolean("Tablist.LongTags");
         this.refreshTagOnWorldChange = config.getBoolean("RefreshTagOnWorldChange");
         DISABLE_PUSH_ALL_TAGS = config.getBoolean("DisablePush");
 
@@ -329,11 +321,7 @@ public class NametagHandler implements Listener {
                 // apply the default white username to the player.
                 player.playerListName(Component.text(PlainTextComponentSerializer.plainText().serialize(player.playerListName()), NamedTextColor.WHITE));
             } else {
-                if (longNametagsEnabled) {
-                    player.playerListName(formatWithPlaceholders(player, nametag.getPrefix() + player.getName() + nametag.getSuffix()));
-                } else {
-                    player.playerListName(null);
-                }
+                player.playerListName(formatWithPlaceholders(player, nametag.getPrefix() + player.getName() + nametag.getSuffix()));
             }
 
             if (loggedIn) {
@@ -452,10 +440,6 @@ public class NametagHandler implements Listener {
                 abstractConfig.save(finalData);
             }
         });
-    }
-
-    public boolean isLongNametagsEnabled() {
-        return longNametagsEnabled;
     }
 
     public AbstractConfig getAbstractConfig() {

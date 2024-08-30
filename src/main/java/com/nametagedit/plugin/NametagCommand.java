@@ -100,10 +100,6 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
                 case "group":
                     cmdGroups(sender, args);
                     break;
-                case "longtags":
-                    handler.toggleLongTags();
-                    NametagMessages.LONG_TAGS.send(sender, handler.isLongNametagsEnabled() ? "&aENABLED" : "&cDISABLED");
-                    break;
                 case "teams":
                     int emptyTeams = 0;
                     boolean unregister = args.length > 1 && args[1].equalsIgnoreCase("clear");
@@ -177,7 +173,6 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
         sender.sendMessage(Utils.formatLegacy("&8» &a/nte player"));
         sender.sendMessage(Utils.formatLegacy("&8» &a/nte group"));
         sender.sendMessage(Utils.formatLegacy("&8» &a/nte priority"));
-        sender.sendMessage(Utils.formatLegacy("&8» &a/nte longtags"));
     }
 
     /**

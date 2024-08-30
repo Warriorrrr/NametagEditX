@@ -46,9 +46,6 @@ NametagEdit has support for EssentialsGroupManager, PermissionsEx, zPermissions,
 #### Q: My client crashes with the reason "Cannot remove from ID#". Why is this?
 **A:** Due to how scoreboards were implemented in Minecraft, a player cannot belong to two teams. Any two plugins that use packets or the Bukkit API which alter team prefixes/suffixes will have conflicts. There is currently no way around this.
 
-#### Q: My nametag is cut short, even with LongTags enabled!
-**A:** LongTags is only able to disable a longer nametag in the tablist. The name above your head has a different limit (16 characters for prefix and suffix.) We are unable to change this, as this limit is imposed by Mojang.
-
 #### Q: Can I sort nametags in the tab list?
 **A:** Yes. Read up on how to use it [here](documentation/Configuration.creole)
 
