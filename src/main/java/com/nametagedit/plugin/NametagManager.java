@@ -8,6 +8,7 @@ import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter") // We synchronize on the FakeTeam parameter in methods that send packets
 public class NametagManager {
 
     private final Map<String, FakeTeam> TEAMS = new ConcurrentHashMap<>();
@@ -30,6 +32,7 @@ public class NametagManager {
      * If there is no team similar to this, then a new
      * team is created.
      */
+    @Nullable
     private FakeTeam getFakeTeam(Component prefix, Component suffix, boolean visible) {
         return TEAMS.values().stream().filter(fakeTeam -> fakeTeam.isSimilar(prefix, suffix, visible)).findFirst().orElse(null);
     }
@@ -61,24 +64,28 @@ public class NametagManager {
 
         player = addingName;
 
-        FakeTeam joining = getFakeTeam(prefix, suffix, visible);
-        if (joining != null) {
-            joining.addMember(player);
-            plugin.debug("Using existing team for " + player);
-        } else {
-            joining = FakeTeam.create(prefix, suffix, sortPriority, playerTag);
-            joining.setVisible(visible);
-            joining.addMember(player);
-            joining.setNameFormattingOverride(nameFormattingOverride);
-            TEAMS.put(joining.getName(), joining);
-            addTeamPackets(joining);
-            plugin.debug("Created FakeTeam " + joining.getName() + ". Size: " + TEAMS.size());
+        synchronized (TEAMS) {
+            FakeTeam joining = getFakeTeam(prefix, suffix, visible);
+            if (joining != null) {
+                synchronized (joining) {
+                    joining.addMember(player);
+                }
+                plugin.debug("Using existing team for " + player);
+            } else {
+                joining = FakeTeam.create(prefix, suffix, sortPriority, playerTag);
+                joining.setVisible(visible);
+                joining.addMember(player);
+                joining.setNameFormattingOverride(nameFormattingOverride);
+                TEAMS.put(joining.getName(), joining);
+                addTeamPackets(joining);
+                plugin.debug("Created FakeTeam " + joining.getName() + ". Size: " + TEAMS.size());
+            }
+
+            addPlayerToTeamPackets(joining, player);
+            cache(player, joining);
+
+            plugin.debug(player + " has been added to team " + joining.getName());
         }
-
-        addPlayerToTeamPackets(joining, player);
-        cache(player, joining);
-
-        plugin.debug(player + " has been added to team " + joining.getName());
     }
 
     public FakeTeam reset(String player) {
@@ -86,28 +93,36 @@ public class NametagManager {
     }
 
     private FakeTeam reset(String player, FakeTeam fakeTeam) {
-        if (fakeTeam != null && fakeTeam.removeMember(player)) {
-            boolean delete;
-            Player removing = Bukkit.getPlayerExact(player);
-            if (removing != null) {
-                delete = removePlayerFromTeamPackets(fakeTeam, removing.getName());
-            } else {
-                OfflinePlayer toRemoveOffline = Bukkit.getOfflinePlayer(player);
-                if (toRemoveOffline.getName() == null)
-                    return fakeTeam;
+        if (fakeTeam == null)
+            return null;
 
-                delete = removePlayerFromTeamPackets(fakeTeam, toRemoveOffline.getName());
+        synchronized (fakeTeam) {
+            if (fakeTeam.removeMember(player)) {
+                boolean delete;
+                Player removing = Bukkit.getPlayerExact(player);
+                if (removing != null) {
+                    delete = removePlayerFromTeamPackets(fakeTeam, removing.getName());
+                } else {
+                    OfflinePlayer toRemoveOffline = Bukkit.getOfflinePlayer(player);
+                    if (toRemoveOffline.getName() == null)
+                        return fakeTeam;
+
+                    delete = removePlayerFromTeamPackets(fakeTeam, toRemoveOffline.getName());
+                }
+
+                plugin.debug(player + " was removed from " + fakeTeam.getName());
+                if (delete) {
+                    synchronized (TEAMS) {
+                        removeTeamPackets(fakeTeam);
+                        TEAMS.remove(fakeTeam.getName());
+                        plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Size: " + TEAMS.size());
+                    }
+                }
             }
 
-            plugin.debug(player + " was removed from " + fakeTeam.getName());
-            if (delete) {
-                removeTeamPackets(fakeTeam);
-                TEAMS.remove(fakeTeam.getName());
-                plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Size: " + TEAMS.size());
-            }
+            return fakeTeam;
         }
 
-        return fakeTeam;
     }
 
     // ==============================================================
@@ -148,8 +163,10 @@ public class NametagManager {
         List<Player> list = List.of(player);
 
         synchronized (TEAMS) {
-            for (FakeTeam fakeTeam : TEAMS.values()) {
-                Packets.send(list, ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
+            for (final FakeTeam fakeTeam : TEAMS.values()) {
+                synchronized (fakeTeam) {
+                    Packets.send(list, ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
+                }
             }
         }
     }
@@ -157,7 +174,6 @@ public class NametagManager {
     void reset() {
         synchronized (TEAMS) {
             for (FakeTeam fakeTeam : TEAMS.values()) {
-                removePlayerFromTeamPackets(fakeTeam, fakeTeam.getMembers());
                 removeTeamPackets(fakeTeam);
             }
 
@@ -170,7 +186,9 @@ public class NametagManager {
     // Below are private methods to construct a new Scoreboard packet
     // ==============================================================
     private void removeTeamPackets(FakeTeam fakeTeam) {
-        Packets.broadcast(ClientboundSetPlayerTeamPacket.createRemovePacket(fakeTeam));
+        synchronized (fakeTeam) {
+            Packets.broadcast(ClientboundSetPlayerTeamPacket.createRemovePacket(fakeTeam));
+        }
     }
 
     private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, String... players) {
@@ -178,18 +196,23 @@ public class NametagManager {
     }
 
     private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, Collection<String> players) {
-        ClientboundSetPlayerTeamPacket packet = ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, players, ClientboundSetPlayerTeamPacket.Action.REMOVE);
-        Packets.broadcast(packet);
+        synchronized (fakeTeam) {
+            Packets.broadcast(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, players, ClientboundSetPlayerTeamPacket.Action.REMOVE));
+        }
 
         return fakeTeam.getMembers().isEmpty();
     }
 
     private void addTeamPackets(FakeTeam fakeTeam) {
-        Packets.broadcast(ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
+        synchronized (fakeTeam) {
+            Packets.broadcast(ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
+        }
     }
 
     private void addPlayerToTeamPackets(FakeTeam fakeTeam, String player) {
-        Packets.broadcast(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, List.of(player), ClientboundSetPlayerTeamPacket.Action.ADD));
+        synchronized (fakeTeam) {
+            Packets.broadcast(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, List.of(player), ClientboundSetPlayerTeamPacket.Action.ADD));
+        }
     }
 
 }

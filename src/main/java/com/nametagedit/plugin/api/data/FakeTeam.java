@@ -65,10 +65,6 @@ public class FakeTeam extends PlayerTeam {
         return this.getPlayers().remove(player);
     }
 
-    public boolean removeMembers(final Collection<String> players) {
-        return this.getPlayers().removeAll(players);
-    }
-
     @NotNull
     public String getName() {
         return name;
