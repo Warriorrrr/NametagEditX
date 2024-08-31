@@ -47,7 +47,7 @@ public class FakeTeam extends PlayerTeam {
 
     public static FakeTeam create(Component prefix, Component suffix, int sortPriority, boolean playerTag) {
         String generatedName = getNameFromInput(sortPriority) + ID.incrementAndGet() + (playerTag ? "+P" : "");
-        generatedName = generatedName.substring(0, Math.min(256, generatedName.length()));
+        generatedName = generatedName.substring(0, Math.min(Short.MAX_VALUE, generatedName.length()));
 
         return new FakeTeam(generatedName, prefix, suffix);
     }
