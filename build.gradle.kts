@@ -19,7 +19,9 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle(libs.paper.get().version)
-    implementation(libs.hikaricp)
+    implementation(libs.hikaricp) {
+        exclude(group = "org.slf4j")
+    }
     compileOnly(libs.luckperms)
     compileOnly(libs.placeholderapi)
 
