@@ -31,8 +31,13 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +56,7 @@ public class NametagHandler implements Listener {
 
     private final Configuration config;
 
-    private final Map<String, GroupData> groupData = new HashMap<>();
+    private final Map<String, GroupData> groupData = new LinkedHashMap<>();
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
 
     private final NametagEdit plugin;
@@ -165,14 +170,20 @@ public class NametagHandler implements Listener {
         }
     }
 
-    public void assignGroupData(Map<String, GroupData> groupData) {
+    public void assignGroupData(Collection<GroupData> groupData) {
+        final List<GroupData> list = groupData instanceof List<GroupData> gdl ? gdl : new ArrayList<>(groupData);
+        list.sort(Comparator.comparingInt(GroupData::getSortPriority));
+
         synchronized (this.groupData) {
             this.groupData.clear();
-            this.groupData.putAll(groupData);
+
+            for (final GroupData data : list) {
+                this.groupData.put(data.getGroupName(), data);
+            }
         }
     }
 
-    public void assignData(Map<String, GroupData> groupData, Map<UUID, PlayerData> playerData) {
+    public void assignData(Collection<GroupData> groupData, Map<UUID, PlayerData> playerData) {
         assignGroupData(groupData);
 
         synchronized (this.playerData) {
@@ -206,7 +217,9 @@ public class NametagHandler implements Listener {
         abstractConfig.add(data);
 
         synchronized (this.groupData) {
-            this.groupData.put(data.getGroupName(), data);
+            List<GroupData> asList = new ArrayList<>(this.groupData.values());
+            asList.add(data);
+            assignGroupData(asList);
         }
     }
 

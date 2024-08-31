@@ -15,10 +15,9 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 public class FlatFileConfig implements AbstractConfig {
@@ -172,7 +171,7 @@ public class FlatFileConfig implements AbstractConfig {
     }
 
     private void loadGroups() {
-        Map<String, GroupData> groupData = new HashMap<>();
+        List<GroupData> groupData = new ArrayList<>();
         for (String groupName : groups.getConfigurationSection("Groups").getKeys(false)) {
             GroupData data = new GroupData(
                     groupName,
@@ -187,7 +186,7 @@ public class FlatFileConfig implements AbstractConfig {
                 data.setNameFormattingOverride(NamedTextColor.NAMES.value(formattingOverride.toLowerCase(Locale.ROOT)));
             }
 
-            groupData.put(groupName, data);
+            groupData.add(data);
         }
 
         handler.assignGroupData(groupData);

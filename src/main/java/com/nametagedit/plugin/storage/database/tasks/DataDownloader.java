@@ -13,7 +13,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DataDownloader implements Runnable {
 
@@ -96,9 +95,7 @@ public class DataDownloader implements Runnable {
                 groupDataUnordered = current; // Reassign the new group order
             }
 
-            Map<String, GroupData> map = groupDataUnordered.stream().collect(Collectors.toMap(GroupData::getGroupName, data -> data));
-
-            handler.assignData(map, playerData); // Safely perform assignments
+            handler.assignData(groupDataUnordered, playerData); // Safely perform assignments
 
             for (Player player : Utils.getOnline()) {
                 PlayerData data = playerData.get(player.getUniqueId());
