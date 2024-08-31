@@ -9,4 +9,5 @@ folia-supported: true
 commands:
   ne:
     description: NametagEdit commands
+    permission: nametagedit.use
     aliases: [nte, nametagedit]
