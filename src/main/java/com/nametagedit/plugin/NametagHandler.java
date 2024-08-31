@@ -251,16 +251,13 @@ public class NametagHandler implements Listener {
      * (So don't change that)
      */
     public Component formatWithPlaceholders(Player player, String input) {
-        plugin.debug("Formatting text..");
         if (input == null) return Component.empty();
         if (player == null) return Colors.color(input);
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            plugin.debug("Trying to use PlaceholderAPI for placeholders");
             input = PlaceholderAPI.setPlaceholders(player, input);
         }
 
-        plugin.debug("Applying colors..");
         return Colors.color(input);
     }
 
@@ -288,10 +285,7 @@ public class NametagHandler implements Listener {
 
         clearEmptyTeamTask = createTask("ClearEmptyTeamsInterval", clearEmptyTeamTask, () -> Bukkit.getGlobalRegionScheduler().run(plugin, task -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nte teams clear")));
 
-        refreshNametagTask = createTask("RefreshInterval", refreshNametagTask, () -> {
-            nametagManager.reset();
-            applyTags();
-        });
+        refreshNametagTask = createTask("RefreshInterval", refreshNametagTask, this::applyTags);
     }
 
     public void applyTags() {
@@ -327,7 +321,7 @@ public class NametagHandler implements Listener {
         final INametag nametag = tempNametag;
         player.getScheduler().run(plugin, t -> {
             nametagManager.setNametag(player.getName(), formatWithPlaceholders(player, nametag.getPrefix()),
-                formatWithPlaceholders(player, nametag.getSuffix()), nametag.getSortPriority(), false, true, nametag.nameFormattingOverride());
+                formatWithPlaceholders(player, nametag.getSuffix()), nametag.getSortPriority(), nametag.isPlayerTag(), true, nametag.nameFormattingOverride());
 
             // If the TabList is disabled...
             if (!tabListEnabled) {

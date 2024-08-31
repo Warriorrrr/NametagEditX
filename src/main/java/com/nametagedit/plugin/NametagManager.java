@@ -33,8 +33,8 @@ public class NametagManager {
      * team is created.
      */
     @Nullable
-    private FakeTeam getFakeTeam(Component prefix, Component suffix, boolean visible) {
-        return TEAMS.values().stream().filter(fakeTeam -> fakeTeam.isSimilar(prefix, suffix, visible)).findFirst().orElse(null);
+    private FakeTeam getFakeTeam(String name, int sortPriority, Component prefix, Component suffix, boolean visible) {
+        return TEAMS.values().stream().filter(fakeTeam -> fakeTeam.isSimilar(name, sortPriority, prefix, suffix, visible)).findFirst().orElse(null);
     }
 
     /**
@@ -42,15 +42,6 @@ public class NametagManager {
      * we do NOT change that.
      */
     private void addPlayerToTeam(String player, Component prefix, Component suffix, int sortPriority, boolean playerTag, boolean visible, NamedTextColor nameFormattingOverride) {
-        FakeTeam previous = getFakeTeam(player);
-
-        if (previous != null && previous.isSimilar(prefix, suffix, visible)) {
-            plugin.debug(player + " already belongs to a similar team (" + previous.getName() + ")");
-            return;
-        }
-
-        reset(player);
-
         String addingName;
         Player adding = Bukkit.getPlayerExact(player);
         if (adding != null)
@@ -64,15 +55,24 @@ public class NametagManager {
 
         player = addingName;
 
+        FakeTeam previous = getFakeTeam(player);
+
+        if (previous != null && previous.isSimilar(player, sortPriority, prefix, suffix, visible)) {
+            plugin.debug(player + " already belongs to a similar team (" + previous.getName() + ")");
+            return;
+        }
+
+        reset(player);
+
         synchronized (TEAMS) {
-            FakeTeam joining = getFakeTeam(prefix, suffix, visible);
+            FakeTeam joining = getFakeTeam(player, sortPriority, prefix, suffix, visible);
             if (joining != null) {
                 synchronized (joining) {
                     joining.addMember(player);
                 }
                 plugin.debug("Using existing team for " + player);
             } else {
-                joining = FakeTeam.create(prefix, suffix, sortPriority, playerTag);
+                joining = FakeTeam.create(player, prefix, suffix, sortPriority, playerTag, visible);
                 joining.setVisible(visible);
                 joining.addMember(player);
                 joining.setNameFormattingOverride(nameFormattingOverride);
@@ -146,7 +146,7 @@ public class NametagManager {
     public void setNametag(String player, Component prefix, Component suffix) {
         setNametag(player, prefix, suffix, -1);
     }
-
+    
     public void setNametag(String player, Component prefix, Component suffix, boolean visible) {
         setNametag(player, prefix, suffix, -1, false, visible, null);
     }
@@ -180,6 +180,23 @@ public class NametagManager {
             CACHED_FAKE_TEAMS.clear();
             TEAMS.clear();
         }
+    }
+
+    int clearEmptyTeams() {
+        int cleared = 0;
+
+        synchronized (TEAMS) {
+            for (final Map.Entry<String, FakeTeam> entry : TEAMS.entrySet()) {
+                if (entry.getValue().getMembers().isEmpty()) {
+                    removeTeamPackets(entry.getValue());
+                    cleared++;
+
+                    TEAMS.remove(entry.getKey());
+                }
+            }
+        }
+
+        return cleared;
     }
 
     // ==============================================================

@@ -15,7 +15,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class represents a Scoreboard Team. It is used
@@ -23,10 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * is responsible for
  */
 public class FakeTeam extends PlayerTeam {
-
-    // This represents the number of FakeTeams that have been created.
-    // It is used to generate a unique Team name.
-    private static final AtomicInteger ID = new AtomicInteger(0);
 
     private final String name;
     private Component prefix;
@@ -36,20 +31,29 @@ public class FakeTeam extends PlayerTeam {
     private ChatFormatting computedNameFormatting = ChatFormatting.RESET;
     private NamedTextColor nameFormattingOverride = null;
 
-    private FakeTeam(String name, Component prefix, Component suffix) {
+    // Both used for similarity checks
+    private final String usedPlayerName; // The name used for generating this teams' full name
+    private final int sortPriority;
+
+    private FakeTeam(String fullName, String usedPlayerName, int sortPriority, Component prefix, Component suffix) {
         //noinspection DataFlowIssue
-        super(null, name); // null is passed here as the scoreboard, but this class overrides used methods that may require it
-        this.name = name;
+        super(null, fullName); // null is passed here as the scoreboard, but this class overrides used methods that may require it
+        this.name = fullName;
+
+        this.usedPlayerName = usedPlayerName;
+        this.sortPriority = sortPriority;
 
         setPrefix(prefix);
         setSuffix(suffix);
     }
 
-    public static FakeTeam create(Component prefix, Component suffix, int sortPriority, boolean playerTag) {
-        String generatedName = getNameFromInput(sortPriority) + ID.incrementAndGet() + (playerTag ? "+P" : "");
+    public static FakeTeam create(@NotNull String player, Component prefix, Component suffix, int sortPriority, boolean playerTag, boolean visible) {
+        Objects.requireNonNull(player, "player");
+
+        String generatedName = "NT_team_" + getNameFromInput(sortPriority) + "_player_" + player + (playerTag ? "+P" : "") + (!visible ? "-V" : "");
         generatedName = generatedName.substring(0, Math.min(Short.MAX_VALUE, generatedName.length()));
 
-        return new FakeTeam(generatedName, prefix, suffix);
+        return new FakeTeam(generatedName, player, sortPriority, prefix, suffix);
     }
 
     public void addMember(final @NotNull String player) {
@@ -146,8 +150,8 @@ public class FakeTeam extends PlayerTeam {
         this.suffix = suffix;
     }
 
-    public boolean isSimilar(Component prefix, Component suffix, boolean visible) {
-        return this.prefix.equals(prefix) && this.suffix.equals(suffix) && this.visible == visible;
+    public boolean isSimilar(String name, int sortPriority, Component prefix, Component suffix, boolean visible) {
+        return this.usedPlayerName.equals(name) && this.sortPriority == sortPriority && this.prefix.equals(prefix) && this.suffix.equals(suffix) && this.visible == visible;
     }
 
     /**
@@ -160,11 +164,22 @@ public class FakeTeam extends PlayerTeam {
      * @return the team name
      */
     private static String getNameFromInput(int input) {
-        if (input < 0) return "Z";
-        char letter = (char) ((input / 5) + 65);
-        int repeat = input % 5 + 1;
+        if (input <= 0) return "A";
 
-        return String.valueOf(letter).repeat(repeat);
+        final StringBuilder name = new StringBuilder();
+
+        while (input > 0) {
+            if (input >= 26) {
+                name.append('Z');
+                input -= 26;
+            } else {
+                char letter = (char) ('A' + (input - 1) % 26);
+                name.append(letter);
+                break;
+            }
+        }
+
+        return name.toString();
     }
 
 }

@@ -101,16 +101,9 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
                     cmdGroups(sender, args);
                     break;
                 case "teams":
-                    int emptyTeams = 0;
                     boolean unregister = args.length > 1 && args[1].equalsIgnoreCase("clear");
-                    for (Team team : Bukkit.getScoreboardManager().getMainScoreboard().getTeams()) {
-                        if (team.getEntries().isEmpty()) {
-                            if (unregister) {
-                                team.unregister();
-                            }
-                            emptyTeams++;
-                        }
-                    }
+
+                    int emptyTeams = NametagEdit.getInstance().getManager().clearEmptyTeams();
 
                     if (!(sender instanceof ConsoleCommandSender) || emptyTeams > 0)
                         NametagMessages.CLEARED_TEAMS.send(sender, emptyTeams, unregister);
