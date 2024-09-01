@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,7 +51,7 @@ public class FakeTeam extends PlayerTeam {
     public static FakeTeam create(@NotNull String player, Component prefix, Component suffix, int sortPriority) {
         Objects.requireNonNull(player, "player");
 
-        String generatedName = "NT_team_" + getNameFromInput(sortPriority) + "_player_" + player;
+        String generatedName = "NT_team_" + getNameFromInput(sortPriority) + "_player_" + player.toLowerCase(Locale.ROOT);
         generatedName = generatedName.substring(0, Math.min(Short.MAX_VALUE, generatedName.length()));
 
         return new FakeTeam(generatedName, player, sortPriority, prefix, suffix);
