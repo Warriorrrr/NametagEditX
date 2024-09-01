@@ -52,7 +52,7 @@ public class NametagEdit extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        manager.reset();
+        //manager.reset();
         handler.getAbstractConfig().shutdown();
     }
 

@@ -380,7 +380,7 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
         }
     }
 
-    private void setupPriority(CommandSender sender, boolean player, String key, String number) {
+    private void setupPriority(CommandSender sender, boolean isPlayer, String playerName, String number) {
         int priority;
 
         try {
@@ -390,8 +390,13 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
             return;
         }
 
-        handler.save(sender, player, key, priority);
-        NametagMessages.SET_PRIORITY.send(sender, priority, key);
+        handler.save(sender, isPlayer, playerName, priority);
+        NametagMessages.SET_PRIORITY.send(sender, priority, playerName);
+
+        final Player player = handler.getPlugin().getServer().getPlayerExact(playerName);
+        if (player != null) {
+            handler.applyTagToPlayer(player, false);
+        }
     }
 
 }

@@ -1,7 +1,9 @@
 package com.nametagedit.plugin.api.data;
 
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -16,6 +18,9 @@ public class PlayerData implements INametag {
     private String suffix;
     private int sortPriority;
 
+    private NamedTextColor nameFormattingOverride;
+    private boolean visible = true;
+
     public PlayerData(final String name, final UUID uuid, final String prefix, final String suffix, final int sortPriority) {
         this.name = name;
         this.uuid = uuid;
@@ -27,13 +32,22 @@ public class PlayerData implements INametag {
     public static PlayerData fromFile(String key, YamlConfiguration file) {
         if (!file.contains("Players." + key)) return null;
 
-        return new PlayerData(
+        PlayerData data = new PlayerData(
                 file.getString("Players." + key + ".Name"),
                 UUID.fromString(key),
                 file.getString("Players." + key + ".Prefix", ""),
                 file.getString("Players." + key + ".Suffix", ""),
                 file.getInt("Players." + key + ".SortPriority", -1)
         );
+
+        String formattingOverride = file.getString("Players." + key + ".NameFormattingOverride", "");
+        if (!formattingOverride.isEmpty()) {
+            data.nameFormattingOverride(NamedTextColor.NAMES.value(formattingOverride.toLowerCase(Locale.ROOT)));
+        }
+
+        data.visible = file.getBoolean("Players." + key + ".NameVisible", true);
+
+        return data;
     }
 
     @Override
@@ -82,5 +96,19 @@ public class PlayerData implements INametag {
 
     public void setSortPriority(int sortPriority) {
         this.sortPriority = sortPriority;
+    }
+    @Override
+    public NamedTextColor nameFormattingOverride() {
+        return this.nameFormattingOverride;
+    }
+
+    @Override
+    public void nameFormattingOverride(NamedTextColor nameFormattingOverride) {
+        this.nameFormattingOverride = nameFormattingOverride;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return this.visible;
     }
 }

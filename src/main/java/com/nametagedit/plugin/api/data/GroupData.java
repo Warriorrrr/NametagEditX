@@ -76,7 +76,8 @@ public class GroupData implements INametag {
         return nameFormattingOverride;
     }
 
-    public void setNameFormattingOverride(NamedTextColor nameFormattingOverride) {
+    @Override
+    public void nameFormattingOverride(NamedTextColor nameFormattingOverride) {
         this.nameFormattingOverride = nameFormattingOverride;
     }
 

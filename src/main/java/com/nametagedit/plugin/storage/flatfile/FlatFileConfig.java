@@ -75,6 +75,12 @@ public class FlatFileConfig implements AbstractConfig {
             players.set("Players." + uuid + ".Prefix", Utils.deformat(playerData.getPrefix()));
             players.set("Players." + uuid + ".Suffix", Utils.deformat(playerData.getSuffix()));
             players.set("Players." + uuid + ".SortPriority", playerData.getSortPriority());
+
+            if (playerData.nameFormattingOverride() != null) {
+                players.set("Players." + uuid + ".NameFormattingOverride", playerData.nameFormattingOverride().toString());
+            }
+
+            players.set("Players." + uuid + ".NameVisible", playerData.isVisible());
         }
 
         save(players, playersFile);
@@ -96,8 +102,8 @@ public class FlatFileConfig implements AbstractConfig {
         if (playerTag) {
             final Player target = Bukkit.getPlayerExact(key);
             if (target != null) {
-                if (players.contains("Players." + target.getUniqueId().toString())) {
-                    players.set("Players." + target.getUniqueId().toString(), priority);
+                if (players.contains("Players." + target.getUniqueId())) {
+                    players.set("Players." + target.getUniqueId() + ".SortPriority", priority);
                     save(players, playersFile);
                 }
                 return;
@@ -105,7 +111,7 @@ public class FlatFileConfig implements AbstractConfig {
 
             UUIDFetcher.lookupUUID(key, plugin, uuid -> {
                 if (players.contains("Players." + uuid.toString())) {
-                    players.set("Players." + uuid, priority);
+                    players.set("Players." + uuid + ".SortPriority", priority);
                     save(players, playersFile);
                 }
             });
@@ -183,7 +189,7 @@ public class FlatFileConfig implements AbstractConfig {
 
             String formattingOverride = groups.getString("Groups." + groupName + ".NameFormattingOverride", "");
             if (!formattingOverride.isEmpty()) {
-                data.setNameFormattingOverride(NamedTextColor.NAMES.value(formattingOverride.toLowerCase(Locale.ROOT)));
+                data.nameFormattingOverride(NamedTextColor.NAMES.value(formattingOverride.toLowerCase(Locale.ROOT)));
             }
 
             groupData.add(data);
@@ -197,6 +203,10 @@ public class FlatFileConfig implements AbstractConfig {
         groups.set("Groups." + groupData.getGroupName() + ".Prefix", Utils.deformat(groupData.getPrefix()));
         groups.set("Groups." + groupData.getGroupName() + ".Suffix", Utils.deformat(groupData.getSuffix()));
         groups.set("Groups." + groupData.getGroupName() + ".SortPriority", groupData.getSortPriority());
+
+        if (groupData.nameFormattingOverride() != null) {
+            groups.set("Groups." + groupData.getGroupName() + ".NameFormattingOverride", groupData.nameFormattingOverride().toString());
+        }
     }
 
 }

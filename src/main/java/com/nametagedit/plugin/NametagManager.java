@@ -72,7 +72,7 @@ public class NametagManager {
                 }
                 plugin.debug("Using existing team for " + player);
             } else {
-                joining = FakeTeam.create(player, prefix, suffix, sortPriority, playerTag, visible);
+                joining = FakeTeam.create(player, prefix, suffix, sortPriority);
                 joining.setVisible(visible);
                 joining.addMember(player);
                 joining.setNameFormattingOverride(nameFormattingOverride);

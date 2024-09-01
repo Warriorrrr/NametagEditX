@@ -321,7 +321,7 @@ public class NametagHandler implements Listener {
         final INametag nametag = tempNametag;
         player.getScheduler().run(plugin, t -> {
             nametagManager.setNametag(player.getName(), formatWithPlaceholders(player, nametag.getPrefix()),
-                formatWithPlaceholders(player, nametag.getSuffix()), nametag.getSortPriority(), nametag.isPlayerTag(), true, nametag.nameFormattingOverride());
+                formatWithPlaceholders(player, nametag.getSuffix()), nametag.getSortPriority(), nametag.isPlayerTag(), nametag.isVisible(), nametag.nameFormattingOverride());
 
             // If the TabList is disabled...
             if (!tabListEnabled) {
@@ -421,6 +421,7 @@ public class NametagHandler implements Listener {
         if (data == null) {
             data = new PlayerData(targetName, null, "", "", -1);
             if (player != null) {
+                data.setUuid(player.getUniqueId());
                 storePlayerData(player.getUniqueId(), data);
             }
         }
@@ -443,6 +444,7 @@ public class NametagHandler implements Listener {
                 NametagMessages.UUID_LOOKUP_FAILED.send(sender);
             }
             else {
+                finalData.setUuid(uuid);
                 storePlayerData(uuid, finalData);
                 abstractConfig.save(finalData);
             }

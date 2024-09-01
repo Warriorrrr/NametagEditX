@@ -14,4 +14,12 @@ public interface INametag {
     default NamedTextColor nameFormattingOverride() {
         return null;
     }
+
+    default void nameFormattingOverride(final NamedTextColor color) {
+
+    }
+
+    default boolean isVisible() {
+        return true;
+    }
 }

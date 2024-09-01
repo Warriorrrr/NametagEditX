@@ -47,10 +47,10 @@ public class FakeTeam extends PlayerTeam {
         setSuffix(suffix);
     }
 
-    public static FakeTeam create(@NotNull String player, Component prefix, Component suffix, int sortPriority, boolean playerTag, boolean visible) {
+    public static FakeTeam create(@NotNull String player, Component prefix, Component suffix, int sortPriority) {
         Objects.requireNonNull(player, "player");
 
-        String generatedName = "NT_team_" + getNameFromInput(sortPriority) + "_player_" + player + (playerTag ? "+P" : "") + (!visible ? "-V" : "");
+        String generatedName = "NT_team_" + getNameFromInput(sortPriority) + "_player_" + player;
         generatedName = generatedName.substring(0, Math.min(Short.MAX_VALUE, generatedName.length()));
 
         return new FakeTeam(generatedName, player, sortPriority, prefix, suffix);
@@ -131,6 +131,7 @@ public class FakeTeam extends PlayerTeam {
 
     public void setNameFormattingOverride(NamedTextColor nameFormattingOverride) {
         this.nameFormattingOverride = nameFormattingOverride;
+        this.computedNameFormatting = computeNameFormatting();
     }
 
     public Component getPrefix() {
