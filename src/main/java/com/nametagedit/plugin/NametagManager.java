@@ -96,9 +96,9 @@ public class NametagManager {
         if (fakeTeam == null)
             return null;
 
+        boolean delete = false;
         synchronized (fakeTeam) {
             if (fakeTeam.removeMember(player)) {
-                boolean delete;
                 Player removing = Bukkit.getPlayerExact(player);
                 if (removing != null) {
                     delete = removePlayerFromTeamPackets(fakeTeam, removing.getName());
@@ -111,18 +111,18 @@ public class NametagManager {
                 }
 
                 plugin.debug(player + " was removed from " + fakeTeam.getName());
-                if (delete) {
-                    synchronized (TEAMS) {
-                        removeTeamPackets(fakeTeam);
-                        TEAMS.remove(fakeTeam.getName());
-                        plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Size: " + TEAMS.size());
-                    }
-                }
             }
-
-            return fakeTeam;
         }
 
+        if (delete) {
+            synchronized (TEAMS) {
+                removeTeamPackets(fakeTeam);
+                TEAMS.remove(fakeTeam.getName());
+                plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Size: " + TEAMS.size());
+            }
+        }
+
+        return fakeTeam;
     }
 
     // ==============================================================
