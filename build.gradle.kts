@@ -30,7 +30,7 @@ dependencies {
 }
 
 group = "com.nametagedit"
-version = "4.6.1"
+version = "4.6.2"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
 tasks {

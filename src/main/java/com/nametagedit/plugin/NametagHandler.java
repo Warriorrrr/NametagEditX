@@ -273,7 +273,7 @@ public class NametagHandler implements Listener {
     public void reload() {
         config.reload(true);
         applyConfig();
-        nametagManager.reset();
+        nametagManager.clearEmptyTeams(); // instead of reset
         abstractConfig.reload();
     }
 

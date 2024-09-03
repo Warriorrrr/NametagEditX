@@ -12,14 +12,20 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter") // We synchronize on the FakeTeam parameter in methods that send packets
 public class NametagManager {
 
     private final Map<String, FakeTeam> TEAMS = new ConcurrentHashMap<>();
+    private final ReadWriteLock TEAMS_LOCK = new ReentrantReadWriteLock();
+
     private final Map<String, FakeTeam> CACHED_FAKE_TEAMS = new ConcurrentHashMap<>();
     private final NametagEdit plugin;
 
@@ -64,28 +70,41 @@ public class NametagManager {
 
         reset(player);
 
-        synchronized (TEAMS) {
-            FakeTeam joining = getFakeTeam(player, sortPriority, prefix, suffix, visible);
-            if (joining != null) {
-                synchronized (joining) {
-                    joining.addMember(player);
-                }
-                plugin.debug("Using existing team for " + player);
-            } else {
-                joining = FakeTeam.create(player, prefix, suffix, sortPriority);
-                joining.setVisible(visible);
+        FakeTeam joining;
+        try {
+            TEAMS_LOCK.readLock().lock();
+            joining = getFakeTeam(player, sortPriority, prefix, suffix, visible);
+        } finally {
+            TEAMS_LOCK.readLock().unlock();
+        }
+
+        if (joining != null) {
+            synchronized (joining) {
                 joining.addMember(player);
-                joining.setNameFormattingOverride(nameFormattingOverride);
+            }
+            plugin.debug("Using existing team for " + player);
+        } else {
+            joining = FakeTeam.create(player, prefix, suffix, sortPriority);
+            joining.setVisible(visible);
+            joining.addMember(player);
+            joining.setNameFormattingOverride(nameFormattingOverride);
+
+            try {
+                TEAMS_LOCK.writeLock().lock();
+
                 TEAMS.put(joining.getName(), joining);
-                addTeamPackets(joining);
-                plugin.debug("Created FakeTeam " + joining.getName() + ". Size: " + TEAMS.size());
+                plugin.debug("Created FakeTeam " + joining.getName() + ". Total teams: " + TEAMS.size());
+            } finally {
+                TEAMS_LOCK.writeLock().unlock();
             }
 
-            addPlayerToTeamPackets(joining, player);
-            cache(player, joining);
-
-            plugin.debug(player + " has been added to team " + joining.getName());
+            addTeamPackets(joining);
         }
+
+        addPlayerToTeamPackets(joining, player);
+        cache(player, joining);
+
+        plugin.debug(player + " has been added to team " + joining.getName());
     }
 
     public FakeTeam reset(String player) {
@@ -103,8 +122,8 @@ public class NametagManager {
                 if (removing != null) {
                     delete = removePlayerFromTeamPackets(fakeTeam, removing.getName());
                 } else {
-                    OfflinePlayer toRemoveOffline = Bukkit.getOfflinePlayer(player);
-                    if (toRemoveOffline.getName() == null)
+                    OfflinePlayer toRemoveOffline = Bukkit.getOfflinePlayerIfCached(player);
+                    if (toRemoveOffline == null || toRemoveOffline.getName() == null)
                         return fakeTeam;
 
                     delete = removePlayerFromTeamPackets(fakeTeam, toRemoveOffline.getName());
@@ -115,11 +134,16 @@ public class NametagManager {
         }
 
         if (delete) {
-            synchronized (TEAMS) {
-                removeTeamPackets(fakeTeam);
+            try {
+                TEAMS_LOCK.writeLock().lock();
+
                 TEAMS.remove(fakeTeam.getName());
-                plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Size: " + TEAMS.size());
+                plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Total teams: " + TEAMS.size());
+            } finally {
+                TEAMS_LOCK.writeLock().unlock();
             }
+
+            removeTeamPackets(fakeTeam);
         }
 
         return fakeTeam;
@@ -160,43 +184,56 @@ public class NametagManager {
     }
 
     void sendTeams(Player player) {
-        List<Player> list = List.of(player);
+        final List<Player> receiving = List.of(player);
 
-        synchronized (TEAMS) {
+        try {
+            TEAMS_LOCK.readLock().lock();
+
             for (final FakeTeam fakeTeam : TEAMS.values()) {
                 synchronized (fakeTeam) {
-                    Packets.send(list, ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
+                    Packets.send(receiving, ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(fakeTeam, true));
                 }
             }
+        } finally {
+            TEAMS_LOCK.readLock().unlock();
         }
     }
 
     void reset() {
-        synchronized (TEAMS) {
+        try {
+            TEAMS_LOCK.writeLock().lock();
             for (FakeTeam fakeTeam : TEAMS.values()) {
                 removeTeamPackets(fakeTeam);
             }
 
             CACHED_FAKE_TEAMS.clear();
             TEAMS.clear();
+        } finally {
+            TEAMS_LOCK.writeLock().unlock();
         }
     }
 
     int clearEmptyTeams() {
-        int cleared = 0;
+        final Set<FakeTeam> emptyTeams = new HashSet<>();
 
-        synchronized (TEAMS) {
+        try {
+            TEAMS_LOCK.writeLock().lock();
+
             for (final Map.Entry<String, FakeTeam> entry : TEAMS.entrySet()) {
-                if (entry.getValue().getMembers().isEmpty()) {
-                    removeTeamPackets(entry.getValue());
-                    cleared++;
-
+                if (entry.getValue().getPlayers().isEmpty()) {
                     TEAMS.remove(entry.getKey());
+                    emptyTeams.add(entry.getValue());
                 }
             }
+        } finally {
+            TEAMS_LOCK.writeLock().unlock();
         }
 
-        return cleared;
+        for (final FakeTeam team : emptyTeams) {
+            removeTeamPackets(team);
+        }
+
+        return emptyTeams.size();
     }
 
     // ==============================================================
@@ -215,9 +252,8 @@ public class NametagManager {
     private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, Collection<String> players) {
         synchronized (fakeTeam) {
             Packets.broadcast(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, players, ClientboundSetPlayerTeamPacket.Action.REMOVE));
+            return fakeTeam.getMembers().isEmpty();
         }
-
-        return fakeTeam.getMembers().isEmpty();
     }
 
     private void addTeamPackets(FakeTeam fakeTeam) {
