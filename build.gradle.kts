@@ -35,11 +35,11 @@ java.sourceCompatibility = JavaVersion.VERSION_21
 
 tasks {
     assemble {
-        dependsOn(reobfJar)
+        dependsOn(shadowJar)
     }
 
     runServer {
-        minecraftVersion("1.20.4")
+        minecraftVersion("1.21.4")
     }
 
     shadowJar {

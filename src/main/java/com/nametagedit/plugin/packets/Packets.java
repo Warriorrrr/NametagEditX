@@ -3,7 +3,7 @@ package com.nametagedit.plugin.packets;
 import com.nametagedit.plugin.NametagEdit;
 import net.minecraft.network.protocol.Packet;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;

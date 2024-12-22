@@ -3,7 +3,7 @@
 
 [versions]
 hikaricp = "4.0.3"
-paper = "1.20.4-R0.1-SNAPSHOT"
+paper = "1.21.4-R0.1-SNAPSHOT"
 placeholderapi = "2.11.6"
 luckperms = "5.4"
 
