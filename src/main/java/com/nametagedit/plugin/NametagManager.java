@@ -264,7 +264,7 @@ public class NametagManager {
 
     private void addPlayerToTeamPackets(FakeTeam fakeTeam, String player) {
         synchronized (fakeTeam) {
-            Packets.broadcast(ClientboundSetPlayerTeamPacket.createMultiplePlayerPacket(fakeTeam, List.of(player), ClientboundSetPlayerTeamPacket.Action.ADD));
+            Packets.broadcast(ClientboundSetPlayerTeamPacket.createPlayerPacket(fakeTeam, player, ClientboundSetPlayerTeamPacket.Action.ADD));
         }
     }
 
