@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    id("io.papermc.paperweight.userdev") version "1.7.2"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.14"
     id("io.github.goooler.shadow") version "8.1.8"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
@@ -35,11 +35,11 @@ java.sourceCompatibility = JavaVersion.VERSION_21
 
 tasks {
     assemble {
-        dependsOn(reobfJar)
+        dependsOn(shadowJar)
     }
 
     runServer {
-        minecraftVersion("1.20.4")
+        minecraftVersion("1.21.4")
     }
 
     shadowJar {
