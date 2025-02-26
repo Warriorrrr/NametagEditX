@@ -1,6 +1,6 @@
 # NametagEdit
 
-[![Support](https://img.shields.io/badge/Minecraft-1.20.4-green.svg)](documentation/Support)
+[![Support](https://img.shields.io/badge/Minecraft-1.21.4-green.svg)](documentation/Support)
 [![JDK](https://img.shields.io/badge/JDK-21-blue.svg)](https://jdk.java.net/java-se-ri/8-MR3)
 [![NametagEditAPI](https://img.shields.io/badge/NTE-Developer%20API-ff69b4.svg)](documentation/Developers.creole)
 
