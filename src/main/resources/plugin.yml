@@ -3,7 +3,7 @@ main: com.nametagedit.plugin.NametagEdit
 version: ${version}
 api-version: '1.20'
 authors: [sgtcaze, Cory, Lorenzo0111, Aurelien30000]
-softdepend: [zPermissions, PermissionsEX, GroupManager, LuckPerms, LibsDisguises, Guilds, PlaceholderAPI]
+softdepend: [LuckPerms, PlaceholderAPI]
 folia-supported: true
 
 commands:

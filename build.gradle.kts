@@ -1,7 +1,7 @@
 plugins {
     `java-library`
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.14"
-    id("io.github.goooler.shadow") version "8.1.8"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
+    id("com.gradleup.shadow") version "9.0.0-beta15"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
@@ -29,7 +29,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.34")
 }
 
-group = "com.nametagedit"
+group = "net.earthmc.nametagedit"
 version = "4.6.2"
 java.sourceCompatibility = JavaVersion.VERSION_21
 

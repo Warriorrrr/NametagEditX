@@ -1,5 +1,5 @@
 [versions]
-hikaricp = "4.0.3"
+hikaricp = "6.3.0"
 paper = "1.21.4-R0.1-SNAPSHOT"
 placeholderapi = "2.11.6"
 luckperms = "5.4"
