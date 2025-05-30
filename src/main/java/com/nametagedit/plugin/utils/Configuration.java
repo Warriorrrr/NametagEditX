@@ -3,7 +3,7 @@ package com.nametagedit.plugin.utils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.bukkit.Bukkit;
+import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -86,7 +86,7 @@ public class Configuration extends YamlConfiguration {
         try {
             load(file);
         } catch (Exception e) {
-            Bukkit.getLogger().log(Level.WARNING, "failed to reload file", e);
+            NametagEdit.getInstance().getLogger().log(Level.WARNING, "failed to reload config file", e);
         }
     }
 
@@ -159,7 +159,7 @@ public class Configuration extends YamlConfiguration {
             try {
                 super.save(file);
             } catch (IOException e) {
-                Bukkit.getLogger().log(Level.WARNING, "Failed to save file", e);
+                NametagEdit.getInstance().getLogger().log(Level.WARNING, "Failed to save config file", e);
             }
             return;
         }
@@ -168,7 +168,7 @@ public class Configuration extends YamlConfiguration {
         final int indentLength = options().indent();
         final String pathSeparator = Character.toString(options().pathSeparator());
         String content = saveToString();
-        StringBuilder fileData = new StringBuilder(buildHeader());
+        StringBuilder fileData = new StringBuilder();
         int currentIndents = 0;
         String key = "";
         for (String h : mainHeader) {
@@ -177,7 +177,7 @@ public class Configuration extends YamlConfiguration {
         }
 
         for (String line : content.split("\n")) {
-            if (line.isEmpty()) continue; // Skip empty lines
+            if (line.isEmpty() || line.trim().startsWith("#")) continue; // Skip empty lines/leftover comments
             int indent = getSuccessiveCharCount(line, ' ');
             int indents = indent / indentLength;
             String indentText = indent > 0 ? line.substring(0, indent) : "";
@@ -201,20 +201,11 @@ public class Configuration extends YamlConfiguration {
         }
 
         // Write data to file
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(file);
+        try (FileWriter writer = new FileWriter(file)) {
             writer.write(fileData.toString());
             writer.flush();
         } catch (IOException e) {
-            Bukkit.getLogger().log(Level.WARNING, "Failed to save file", e);
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException ignored) {
-                }
-            }
+            NametagEdit.getInstance().getLogger().log(Level.WARNING, "Failed to save config file", e);
         }
     }
 
