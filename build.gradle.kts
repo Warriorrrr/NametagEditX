@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    `maven-publish`
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
     id("com.gradleup.shadow") version "9.0.0-beta15"
     id("xyz.jpenilla.run-paper") version "2.3.1"
@@ -54,6 +55,30 @@ tasks {
         filteringCharset = Charsets.UTF_8.name()
 
         expand("version" to project.version)
+    }
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    repositories {
+        maven {
+            val releasesUrl = "https://repo.earthmc.net/releases-internal"
+            val snapshotsUrl = "https://repo.earthmc.net/snapshots-internal"
+            url = uri(if (project.version.toString().endsWith("-SNAPSHOT")) snapshotsUrl else releasesUrl)
+
+            name = "earthmc"
+            credentials(PasswordCredentials::class)
+        }
+    }
+
+    publications {
+        create<MavenPublication>("maven") {
+            from(components.getByName("java"))
+        }
     }
 }
 
