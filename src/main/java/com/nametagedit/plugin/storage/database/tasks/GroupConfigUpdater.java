@@ -2,18 +2,22 @@ package com.nametagedit.plugin.storage.database.tasks;
 
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class GroupConfigUpdater implements Runnable {
 
     private final String setting;
     private final String value;
     private final HikariDataSource hikari;
+
+    public GroupConfigUpdater(String setting, String value, HikariDataSource hikari) {
+        this.setting = setting;
+        this.value = value;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

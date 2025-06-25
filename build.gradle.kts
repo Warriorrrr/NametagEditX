@@ -24,9 +24,6 @@ dependencies {
     }
     compileOnly(libs.luckperms)
     compileOnly(libs.placeholderapi)
-
-    compileOnly("org.projectlombok:lombok:1.18.34")
-    annotationProcessor("org.projectlombok:lombok:1.18.34")
 }
 
 group = "net.earthmc.nametagedit"

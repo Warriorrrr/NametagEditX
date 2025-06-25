@@ -2,18 +2,21 @@ package com.nametagedit.plugin.storage.database.tasks;
 
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
-@AllArgsConstructor
 public class PlayerDeleter implements Runnable {
 
     private final UUID uuid;
     private final HikariDataSource hikari;
+
+    public PlayerDeleter(UUID uuid, HikariDataSource hikari) {
+        this.uuid = uuid;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

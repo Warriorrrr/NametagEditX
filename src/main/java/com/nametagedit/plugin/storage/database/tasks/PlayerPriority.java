@@ -2,19 +2,23 @@ package com.nametagedit.plugin.storage.database.tasks;
 
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
-@AllArgsConstructor
 public class PlayerPriority implements Runnable {
 
     private final UUID player;
     private final int priority;
     private final HikariDataSource hikari;
+
+    public PlayerPriority(UUID player, int priority, HikariDataSource hikari) {
+        this.player = player;
+        this.priority = priority;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

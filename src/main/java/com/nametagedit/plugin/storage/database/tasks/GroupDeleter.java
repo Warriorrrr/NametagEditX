@@ -2,17 +2,20 @@ package com.nametagedit.plugin.storage.database.tasks;
 
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class GroupDeleter implements Runnable {
 
     private final String groupName;
     private final HikariDataSource hikari;
+
+    public GroupDeleter(String groupName, HikariDataSource hikari) {
+        this.groupName = groupName;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

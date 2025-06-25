@@ -2,18 +2,22 @@ package com.nametagedit.plugin.storage.database.tasks;
 
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class GroupPriority implements Runnable {
 
     private final String group;
     private final int priority;
     private final HikariDataSource hikari;
+
+    public GroupPriority(String group, int priority, HikariDataSource hikari) {
+        this.group = group;
+        this.priority = priority;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

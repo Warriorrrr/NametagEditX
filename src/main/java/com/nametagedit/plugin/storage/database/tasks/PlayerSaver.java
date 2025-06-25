@@ -4,17 +4,20 @@ import com.nametagedit.plugin.api.data.PlayerData;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.utils.Utils;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class PlayerSaver implements Runnable {
 
     private final PlayerData[] playerData;
     private final HikariDataSource hikari;
+
+    public PlayerSaver(PlayerData[] playerData, HikariDataSource hikari) {
+        this.playerData = playerData;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

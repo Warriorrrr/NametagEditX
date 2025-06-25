@@ -4,17 +4,20 @@ import com.nametagedit.plugin.api.data.GroupData;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.utils.Utils;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class GroupSaver implements Runnable {
 
     private final GroupData[] groupData;
     private final HikariDataSource hikari;
+
+    public GroupSaver(GroupData[] groupData, HikariDataSource hikari) {
+        this.groupData = groupData;
+        this.hikari = hikari;
+    }
 
     @Override
     public void run() {

@@ -4,14 +4,12 @@ import com.nametagedit.plugin.NametagEdit;
 import com.nametagedit.plugin.NametagHandler;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.AllArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class DatabaseUpdater implements Runnable {
 
     private final NametagHandler handler;
@@ -19,6 +17,12 @@ public class DatabaseUpdater implements Runnable {
     private final NametagEdit plugin;
 
     private static final int CURRENT_DATABASE_VERSION = 5;
+
+    public DatabaseUpdater(NametagHandler handler, HikariDataSource hikari, NametagEdit plugin) {
+        this.handler = handler;
+        this.hikari = hikari;
+        this.plugin = plugin;
+    }
 
     @Override
     public void run() {

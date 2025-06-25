@@ -4,24 +4,32 @@ import com.nametagedit.plugin.NametagEdit;
 import com.nametagedit.plugin.NametagMessages;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.utils.Utils;
-import lombok.AllArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * This class converts to and from Flatfile and MySQL
  */
-@AllArgsConstructor
 public class ConverterTask implements Runnable {
 
     private final boolean databaseToFile;
     private final CommandSender sender;
     private final NametagEdit plugin;
+
+    public ConverterTask(boolean databaseToFile, CommandSender sender, NametagEdit plugin) {
+        this.databaseToFile = databaseToFile;
+        this.sender = sender;
+        this.plugin = plugin;
+    }
 
     @Override
     public void run() {

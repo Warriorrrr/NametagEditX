@@ -1,23 +1,19 @@
 package com.nametagedit.plugin.storage.database.tasks;
 
+import com.nametagedit.plugin.NametagHandler;
+import com.nametagedit.plugin.api.data.PlayerData;
+import com.nametagedit.plugin.storage.database.DatabaseConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
-import com.nametagedit.plugin.NametagHandler;
-import com.nametagedit.plugin.api.data.PlayerData;
-import com.nametagedit.plugin.storage.database.DatabaseConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 public class PlayerLoader implements Runnable {
 
     private UUID uuid;
@@ -25,6 +21,14 @@ public class PlayerLoader implements Runnable {
     private NametagHandler handler;
     private HikariDataSource hikari;
     private boolean loggedIn;
+
+    public PlayerLoader(UUID uuid, Plugin plugin, NametagHandler handler, HikariDataSource hikari, boolean loggedIn) {
+        this.uuid = uuid;
+        this.plugin = plugin;
+        this.handler = handler;
+        this.hikari = hikari;
+        this.loggedIn = loggedIn;
+    }
 
     @Override
     public void run() {
@@ -73,7 +77,8 @@ public class PlayerLoader implements Runnable {
                     }
 
                     handler.applyTagToPlayer(player, loggedIn);
-                }, () -> {});
+                }, () -> {
+                });
             }
         }
     }
