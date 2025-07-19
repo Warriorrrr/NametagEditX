@@ -254,7 +254,7 @@ public class NametagHandler implements Listener {
         if (input == null) return Component.empty();
         if (player == null) return Colors.color(input);
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+        if (this.plugin.getPlaceholderAPI() != null && this.plugin.getPlaceholderAPI().usingPlaceholderAPI) {
             input = PlaceholderAPI.setPlaceholders(player, input);
         }
 

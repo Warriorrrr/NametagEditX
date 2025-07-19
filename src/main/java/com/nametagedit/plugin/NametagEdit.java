@@ -3,6 +3,7 @@ package com.nametagedit.plugin;
 import com.nametagedit.plugin.api.INametagApi;
 import com.nametagedit.plugin.api.NametagAPI;
 import com.nametagedit.plugin.hooks.HookLuckPerms;
+import com.nametagedit.plugin.hooks.HookPlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.PluginManager;
@@ -18,6 +19,9 @@ public class NametagEdit extends JavaPlugin {
 
     private NametagHandler handler;
     private NametagManager manager;
+
+    private HookLuckPerms luckPerms;
+    private HookPlaceholderAPI placeholderAPI;
 
     public static INametagApi getApi() {
         return api;
@@ -36,7 +40,12 @@ public class NametagEdit extends JavaPlugin {
         PluginManager pluginManager = Bukkit.getPluginManager();
 
         if (checkShouldRegister("LuckPerms")) {
-            pluginManager.registerEvents(new HookLuckPerms(handler), this);
+            this.luckPerms = new HookLuckPerms(handler);
+        }
+
+        if (checkShouldRegister("PlaceholderAPI")) {
+            this.placeholderAPI = new HookPlaceholderAPI(this);
+            pluginManager.registerEvents(this.placeholderAPI, this);
         }
 
         Objects.requireNonNull(getCommand("ne")).setExecutor(new NametagCommand(handler));
@@ -54,6 +63,10 @@ public class NametagEdit extends JavaPlugin {
     public void onDisable() {
         //manager.reset();
         handler.getAbstractConfig().shutdown();
+
+        if (this.luckPerms != null) {
+            this.luckPerms.unsubscribe();
+        }
     }
 
     void debug(String message) {
@@ -88,5 +101,9 @@ public class NametagEdit extends JavaPlugin {
 
     public NametagManager getManager() {
         return manager;
+    }
+
+    public HookPlaceholderAPI getPlaceholderAPI() {
+        return this.placeholderAPI;
     }
 }

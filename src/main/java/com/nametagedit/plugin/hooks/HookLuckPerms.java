@@ -4,6 +4,7 @@ import com.nametagedit.plugin.NametagHandler;
 import com.nametagedit.plugin.api.data.GroupData;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.event.EventBus;
+import net.luckperms.api.event.EventSubscription;
 import net.luckperms.api.event.node.NodeAddEvent;
 import net.luckperms.api.event.node.NodeClearEvent;
 import net.luckperms.api.event.node.NodeMutateEvent;
@@ -13,16 +14,26 @@ import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 
-public class HookLuckPerms implements Listener {
+public class HookLuckPerms {
 
     private final NametagHandler handler;
+    private EventSubscription<?> subscription;
 
     public HookLuckPerms(NametagHandler handler) {
         this.handler = handler;
+    }
+
+    public void subscribe() {
         EventBus eventBus = LuckPermsProvider.get().getEventBus();
-        eventBus.subscribe(handler.getPlugin(), NodeMutateEvent.class, this::onNodeMutate);
+        this.subscription = eventBus.subscribe(handler.getPlugin(), NodeMutateEvent.class, this::onNodeMutate);
+    }
+
+    public void unsubscribe() {
+        if (this.subscription != null) {
+            this.subscription.close();
+            this.subscription = null;
+        }
     }
 
     private void onNodeMutate(NodeMutateEvent event) {
