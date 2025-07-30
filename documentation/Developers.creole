@@ -8,8 +8,8 @@ Add the following repository to your POM.xml:
 
 {{{
 <repository>
-    <id>upstream</id>
-    <url>https://ci.nametagedit.com/plugin/repository/everything/</url>
+    <id>warrior</id>
+    <url>https://repo.warriorrr.dev/releases</url>
 </repository>
 }}}
 
@@ -17,10 +17,25 @@ Then add the dependency:
 
 {{{
 <dependency>
-    <groupId>com.nametagedit</groupId>
-    <artifactId>nametagedit</artifactId>
-    <version>4.4.16</version>
+    <groupId>dev.warriorrr.nametagedit</groupId>
+    <artifactId>NametagEditX</artifactId>
+    <version>5.0.0</version>
+    <scope>provided</scope>
 </dependency>
+}}}
+
+== Gradle
+
+Add the following to the repositories section of your build.gradle.kts:
+
+{{{
+maven("https://repo.warriorrr.dev/releases")
+}}}
+
+Then add the following as a dependency:
+
+{{{
+compileOnly("dev.warriorrr.nametagedit:NametagEditX:5.0.0")
 }}}
 
 == API Usage
@@ -68,7 +83,7 @@ Example Usage:
 
 {{{
     public void something(Player player) {
-        NametagEdit.getApi().setPrefix(player, "&c");
+        NametagEdit.getApi().setPrefix(player, "<red>");
     }
 }}}
 

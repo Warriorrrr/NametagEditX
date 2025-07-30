@@ -2,7 +2,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
-    id("com.gradleup.shadow") version "9.0.0-beta15"
+    id("com.gradleup.shadow") version "9.0.0-rc2"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle(libs.paper.get().version)
+    paperweight.paperDevBundle("${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
     implementation(libs.hikaricp) {
         exclude(group = "org.slf4j")
     }
@@ -27,8 +27,6 @@ dependencies {
     compileOnly(libs.placeholderapi)
 }
 
-group = "net.earthmc.nametagedit"
-version = "4.6.2"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
 tasks {
@@ -37,7 +35,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion(libs.versions.minecraft.get())
     }
 
     shadowJar {
@@ -54,7 +52,10 @@ tasks {
     processResources {
         filteringCharset = Charsets.UTF_8.name()
 
-        expand("version" to project.version)
+        expand(
+            "version" to project.version,
+            "api_version" to libs.versions.minecraft.get()
+        )
     }
 }
 
@@ -66,11 +67,11 @@ java {
 publishing {
     repositories {
         maven {
-            val releasesUrl = "https://repo.earthmc.net/releases-internal"
-            val snapshotsUrl = "https://repo.earthmc.net/snapshots-internal"
+            val releasesUrl = "https://repo.warriorrr.dev/releases"
+            val snapshotsUrl = "https://repo.warriorrrr.dev/snapshots"
             url = uri(if (project.version.toString().endsWith("-SNAPSHOT")) snapshotsUrl else releasesUrl)
 
-            name = "earthmc"
+            name = "warrior"
             credentials(PasswordCredentials::class)
         }
     }

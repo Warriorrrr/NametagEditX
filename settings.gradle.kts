@@ -1,1 +1,1 @@
-rootProject.name = "NametagEdit"
+rootProject.name = "NametagEditX"

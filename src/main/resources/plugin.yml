@@ -1,8 +1,9 @@
-name: NametagEdit
+name: NametagEditX
+provides: [NametagEdit]
 main: com.nametagedit.plugin.NametagEdit
 version: ${version}
-api-version: '1.20'
-authors: [sgtcaze, Cory, Lorenzo0111, Aurelien30000]
+api-version: '${api_version}'
+author: Warriorrr
 softdepend: [LuckPerms, PlaceholderAPI]
 folia-supported: true
 
