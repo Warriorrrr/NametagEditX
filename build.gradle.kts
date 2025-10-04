@@ -2,20 +2,15 @@ plugins {
     `java-library`
     `maven-publish`
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
-    id("com.gradleup.shadow") version "9.0.0-rc2"
-    id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("com.gradleup.shadow") version "9.2.2"
+    id("xyz.jpenilla.run-paper") version "3.0.1"
 }
 
 repositories {
     mavenCentral()
 
-    maven {
-        url = uri("https://repo.papermc.io/repository/maven-public/")
-    }
-
-    maven {
-        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-    }
+    maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 }
 
 dependencies {
@@ -35,7 +30,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion(libs.versions.minecraft.get())
+        minecraftVersion(project.findProperty("minecraftVersion") as? String ?: libs.versions.minecraft.get())
     }
 
     shadowJar {
